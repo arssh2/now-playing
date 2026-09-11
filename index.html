@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>arssh2 — now playing</title>
 <style>
   :root{
@@ -29,6 +29,7 @@
     align-items:center;
     justify-content:center;
     padding:24px;
+    padding:max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
     position:relative;
   }
 
@@ -166,7 +167,7 @@
   }
 
   .track{
-    font-size:32px;
+    font-size:clamp(20px, 5.5vw, 32px);
     font-weight:600;
     line-height:1.25;
     margin:0 0 6px;
@@ -178,7 +179,7 @@
   }
 
   .artist{
-    font-size:20px;
+    font-size:clamp(14px, 3.6vw, 20px);
     color:var(--text-dim);
     margin:0;
     white-space:nowrap;
@@ -243,18 +244,34 @@
 
   .lyrics.empty{ display:none; }
 
+  .lyric-line{
+    padding:3px 0;
+    opacity:0.55;
+    transition:opacity 0.35s ease, color 0.35s ease, transform 0.35s ease;
+  }
+
+  .lyric-line.active{
+    opacity:1;
+    color:var(--text);
+    font-weight:600;
+    transform:translateX(2px);
+  }
+
   @media (max-width: 480px){
     body{ padding:14px; }
     .unit{ padding:16px; border-radius:18px; }
-    .screen{ padding:20px; min-height:auto; }
+    .screen{ padding:18px; min-height:auto; }
     .row{ gap:14px; }
     .art{ width:76px; height:76px; }
     .art svg{ width:32px; height:32px; }
-    .track{ font-size:21px; }
-    .artist{ font-size:15px; }
     .status-line{ font-size:12px; margin-bottom:12px; }
     .footer{ font-size:11px; margin-top:16px; }
     .lyrics{ font-size:13px; max-height:140px; margin-top:16px; padding-top:14px; }
+  }
+
+  @media (max-width: 360px){
+    .row{ flex-direction:column; align-items:flex-start; gap:12px; }
+    .art{ width:96px; height:96px; }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -322,6 +339,9 @@
 
   let bgActive = 'A';
   let lastTrackKey = null;
+  let syncedLines = null;
+  let trackStartMs = null;
+  let activeLine = -1;
 
   const fallbackArt = el.art.innerHTML;
 
@@ -372,20 +392,30 @@
 
   const lyricsCache = {};
 
-  async function fetchLyrics(artist, title){
+  function parseLRC(lrcText){
+    return lrcText.split('\n').map(line => {
+      const m = line.match(/^\[(\d{1,2}):(\d{2}(?:\.\d+)?)\](.*)$/);
+      if (!m) return null;
+      const time = parseInt(m[1], 10) * 60 + parseFloat(m[2]);
+      const text = m[3].trim();
+      return text ? { time, text } : null;
+    }).filter(Boolean);
+  }
+
+  async function fetchLyricsData(artist, title){
     const key = `${artist}|${title}`.toLowerCase();
     if (lyricsCache[key] !== undefined) return lyricsCache[key];
+    let result = { synced: null, plain: null };
     try{
-      const res = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
-      if (!res.ok){ lyricsCache[key] = null; return null; }
-      const data = await res.json();
-      const text = data?.lyrics ? data.lyrics.trim() : null;
-      lyricsCache[key] = text;
-      return text;
-    } catch(e){
-      lyricsCache[key] = null;
-      return null;
-    }
+      const res = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`);
+      if (res.ok){
+        const data = await res.json();
+        if (data.syncedLyrics) result.synced = parseLRC(data.syncedLyrics);
+        if (data.plainLyrics) result.plain = data.plainLyrics.trim();
+      }
+    } catch(e){ /* fall through with nulls */ }
+    lyricsCache[key] = result;
+    return result;
   }
 
   function timeAgo(unixSeconds){
@@ -472,11 +502,22 @@
 
       if (isNewTrack){
         el.lyrics.classList.add('empty');
-        el.lyrics.textContent = '';
-        fetchLyrics(artistName, trackTitle).then(text => {
-          if (trackKey !== lastTrackKey) return; // track moved on again before this resolved
-          if (text){
-            el.lyrics.textContent = text;
+        el.lyrics.innerHTML = '';
+        syncedLines = null;
+        activeLine = -1;
+        trackStartMs = Date.now();
+
+        fetchLyricsData(artistName, trackTitle).then(({ synced, plain }) => {
+          if (trackKey !== lastTrackKey) return; // track moved on before this resolved
+
+          if (synced && synced.length){
+            syncedLines = synced;
+            el.lyrics.innerHTML = synced.map((l, i) =>
+              `<div class="lyric-line" data-i="${i}">${l.text}</div>`
+            ).join('');
+            el.lyrics.classList.remove('empty');
+          } else if (plain){
+            el.lyrics.textContent = plain;
             el.lyrics.classList.remove('empty');
           } else {
             el.lyrics.classList.add('empty');
@@ -503,8 +544,30 @@
     }
   }
 
+  function tickLyrics(){
+    if (!syncedLines || !trackStartMs) return;
+    const elapsed = (Date.now() - trackStartMs) / 1000;
+    let idx = -1;
+    for (let i = 0; i < syncedLines.length; i++){
+      if (syncedLines[i].time <= elapsed) idx = i; else break;
+    }
+    if (idx !== activeLine){
+      const prev = el.lyrics.querySelector('.lyric-line.active');
+      if (prev) prev.classList.remove('active');
+      if (idx >= 0){
+        const cur = el.lyrics.querySelector(`.lyric-line[data-i="${idx}"]`);
+        if (cur){
+          cur.classList.add('active');
+          cur.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }
+      activeLine = idx;
+    }
+  }
+
   fetchNowPlaying();
   setInterval(fetchNowPlaying, POLL_MS);
+  setInterval(tickLyrics, 400);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') fetchNowPlaying();
