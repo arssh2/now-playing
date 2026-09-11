@@ -339,6 +339,47 @@
     min-height:16px;
   }
 
+  .song-input-wrap{
+    position:relative;
+    flex:1 1 140px;
+  }
+
+  .song-input-wrap input{ width:100%; }
+
+  .song-suggestions{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0;
+    right:0;
+    background:#1a2023;
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    overflow:hidden;
+    z-index:10;
+    display:none;
+    max-height:220px;
+    overflow-y:auto;
+    box-shadow:0 12px 24px -8px rgba(0,0,0,0.6);
+  }
+
+  .song-suggestions.show{ display:block; }
+
+  .song-suggestion{
+    padding:9px 12px;
+    cursor:pointer;
+    font-size:13px;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+
+  .song-suggestion:last-child{ border-bottom:none; }
+
+  .song-suggestion:hover, .song-suggestion.highlighted{
+    background:rgba(255,255,255,0.06);
+  }
+
+  .song-suggestion .ss-title{ color:var(--text); }
+  .song-suggestion .ss-artist{ color:var(--text-dim); font-size:12px; }
+
   .queue-list{
     display:flex;
     flex-direction:column;
@@ -415,7 +456,10 @@
     <div class="queue-section">
       <div class="queue-label">request a song</div>
       <form id="requestForm" class="request-form">
-        <input type="text" id="reqSong" placeholder="song title" required maxlength="120">
+        <div class="song-input-wrap">
+          <input type="text" id="reqSong" placeholder="song title" required maxlength="120" autocomplete="off">
+          <div class="song-suggestions" id="songSuggestions"></div>
+        </div>
         <input type="text" id="reqArtist" placeholder="artist (optional)" maxlength="120">
         <input type="text" id="reqName" placeholder="your name (optional)" maxlength="60">
         <button type="submit" id="reqSubmit">add to queue</button>
@@ -713,7 +757,64 @@
     submit: document.getElementById('reqSubmit'),
     status: document.getElementById('reqStatus'),
     list: document.getElementById('queueList'),
+    suggestions: document.getElementById('songSuggestions'),
   };
+
+  let searchDebounce = null;
+  let suggestionResults = [];
+
+  async function searchSongs(query){
+    try{
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=6`);
+      const data = await res.json();
+      return data?.results || [];
+    } catch(e){
+      return [];
+    }
+  }
+
+  function renderSuggestions(results){
+    suggestionResults = results;
+    if (!results.length){
+      qEl.suggestions.classList.remove('show');
+      qEl.suggestions.innerHTML = '';
+      return;
+    }
+    qEl.suggestions.innerHTML = results.map((r, i) => `
+      <div class="song-suggestion" data-i="${i}">
+        <div class="ss-title">${escapeHtml(r.trackName || '')}</div>
+        <div class="ss-artist">${escapeHtml(r.artistName || '')}</div>
+      </div>
+    `).join('');
+    qEl.suggestions.classList.add('show');
+  }
+
+  qEl.song.addEventListener('input', () => {
+    const q = qEl.song.value.trim();
+    clearTimeout(searchDebounce);
+    if (q.length < 2){
+      renderSuggestions([]);
+      return;
+    }
+    searchDebounce = setTimeout(async () => {
+      const results = await searchSongs(q);
+      renderSuggestions(results);
+    }, 300);
+  });
+
+  qEl.suggestions.addEventListener('click', (e) => {
+    const item = e.target.closest('.song-suggestion');
+    if (!item) return;
+    const pick = suggestionResults[parseInt(item.dataset.i, 10)];
+    if (!pick) return;
+    qEl.song.value = pick.trackName || '';
+    qEl.artist.value = pick.artistName || '';
+    renderSuggestions([]);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.song-input-wrap')) renderSuggestions([]);
+  });
 
   function escapeHtml(str){
     const d = document.createElement('div');
