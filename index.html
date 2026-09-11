@@ -277,6 +277,101 @@
   @media (prefers-reduced-motion: reduce){
     .dot.live, .bars span, .bg-layer{ animation:none !important; }
   }
+
+  .queue-section{
+    margin-top:26px;
+    padding-top:22px;
+    border-top:1px solid var(--panel-edge);
+  }
+
+  .queue-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+    text-transform:lowercase;
+    margin-bottom:10px;
+  }
+
+  .request-form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .request-form input{
+    flex:1 1 140px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:14px;
+    outline:none;
+  }
+
+  .request-form input::placeholder{ color:var(--text-dim); }
+
+  .request-form input:focus{ border-color:rgba(var(--accent), 0.6); }
+
+  .request-form button{
+    flex:1 1 100%;
+    background:rgb(var(--accent));
+    border:none;
+    border-radius:8px;
+    padding:11px;
+    color:#0a0c0d;
+    font-weight:600;
+    font-family:inherit;
+    font-size:14px;
+    cursor:pointer;
+    transition:opacity 0.2s ease;
+  }
+
+  .request-form button:disabled{ opacity:0.5; cursor:default; }
+
+  .queue-status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  .queue-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:180px;
+    overflow-y:auto;
+  }
+
+  .queue-empty{
+    font-size:13px;
+    color:var(--text-dim);
+    font-style:italic;
+  }
+
+  .queue-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    padding:8px 10px;
+    background:rgba(255,255,255,0.03);
+    border-radius:8px;
+    font-size:14px;
+  }
+
+  .queue-item .qi-song{ font-weight:600; }
+  .queue-item .qi-artist{ color:var(--text-dim); font-size:13px; }
+  .queue-item .qi-by{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    white-space:nowrap;
+  }
 </style>
 </head>
 <body>
@@ -316,12 +411,33 @@
       <span>arssh2</span>
       <span id="updated">—</span>
     </div>
+
+    <div class="queue-section">
+      <div class="queue-label">request a song</div>
+      <form id="requestForm" class="request-form">
+        <input type="text" id="reqSong" placeholder="song title" required maxlength="120">
+        <input type="text" id="reqArtist" placeholder="artist (optional)" maxlength="120">
+        <input type="text" id="reqName" placeholder="your name (optional)" maxlength="60">
+        <button type="submit" id="reqSubmit">add to queue</button>
+      </form>
+      <div class="queue-status" id="reqStatus"></div>
+
+      <div class="queue-label" style="margin-top:20px;">up next</div>
+      <div class="queue-list" id="queueList">
+        <div class="queue-empty">nothing queued yet — be the first</div>
+      </div>
+    </div>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  const SUPABASE_URL = 'https://zfdatkpwjsyuhsvtgpwr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_allE_4lYErxKjSdIhP8jgQ_opleAEYg';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   const USER = 'arssh2';
   const API_KEY = '2aab1059e9b8780dd6a9b3aef05a3108';
-  const POLL_MS = 5000;
+  const POLL_MS = 1000;
 
   const el = {
     dot: document.getElementById('dot'),
@@ -587,6 +703,83 @@
   fetchNowPlaying();
   setInterval(fetchNowPlaying, POLL_MS);
   setInterval(tickLyrics, 400);
+
+  // --- song request queue ---
+  const qEl = {
+    form: document.getElementById('requestForm'),
+    song: document.getElementById('reqSong'),
+    artist: document.getElementById('reqArtist'),
+    name: document.getElementById('reqName'),
+    submit: document.getElementById('reqSubmit'),
+    status: document.getElementById('reqStatus'),
+    list: document.getElementById('queueList'),
+  };
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function loadQueue(){
+    try{
+      const { data, error } = await sb
+        .from('queue')
+        .select('song, artist, requester, created_at')
+        .order('created_at', { ascending: false })
+        .limit(8);
+
+      if (error || !data || data.length === 0){
+        qEl.list.innerHTML = '<div class="queue-empty">nothing queued yet — be the first</div>';
+        return;
+      }
+
+      qEl.list.innerHTML = data.map(row => `
+        <div class="queue-item">
+          <span>
+            <span class="qi-song">${escapeHtml(row.song)}</span>
+            ${row.artist ? `<span class="qi-artist"> — ${escapeHtml(row.artist)}</span>` : ''}
+          </span>
+          <span class="qi-by">${row.requester ? escapeHtml(row.requester) : 'anon'}</span>
+        </div>
+      `).join('');
+    } catch(e){
+      // leave last known list showing rather than clearing on a transient error
+    }
+  }
+
+  qEl.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const song = qEl.song.value.trim();
+    if (!song) return;
+
+    qEl.submit.disabled = true;
+    qEl.status.textContent = 'adding…';
+
+    try{
+      const { error } = await sb.from('queue').insert({
+        song: song,
+        artist: qEl.artist.value.trim() || null,
+        requester: qEl.name.value.trim() || null,
+      });
+
+      if (error){
+        qEl.status.textContent = 'could not add — try again';
+      } else {
+        qEl.status.textContent = 'added to the queue';
+        qEl.form.reset();
+        loadQueue();
+      }
+    } catch(e){
+      qEl.status.textContent = 'could not add — try again';
+    }
+
+    qEl.submit.disabled = false;
+    setTimeout(() => { qEl.status.textContent = ''; }, 3000);
+  });
+
+  loadQueue();
+  setInterval(loadQueue, 1000);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') fetchNowPlaying();
