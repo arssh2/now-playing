@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>arssh2 — now playing</title>
+<style>
+  :root{
+    --asphalt: #0a0c0d;
+    --panel: #14181a;
+    --panel-edge: #1f2528;
+    --amber: #ffb92e;
+    --amber-dim: #8a641c;
+    --teal: #2dd4bf;
+    --text: #e8e8e6;
+    --text-dim: #7a8286;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    height:100%;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,185,46,0.06), transparent 60%),
+      var(--asphalt);
+    color:var(--text);
+    font-family:'Space Grotesk', -apple-system, 'Segoe UI', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  @font-face{
+    font-family:'Space Grotesk';
+    src:local('Space Grotesk');
+  }
+
+  .unit{
+    width:100%;
+    max-width:520px;
+    background:linear-gradient(180deg, #171c1e, #101315);
+    border:1px solid var(--panel-edge);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:
+      0 40px 80px -30px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .screen{
+    background:var(--panel);
+    border-radius:12px;
+    border:1px solid var(--panel-edge);
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+    min-height:220px;
+  }
+
+  .screen::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+  }
+
+  .row{
+    display:flex;
+    gap:18px;
+    align-items:center;
+  }
+
+  .art{
+    width:88px;
+    height:88px;
+    border-radius:8px;
+    flex-shrink:0;
+    background:#1c2225;
+    background-size:cover;
+    background-position:center;
+    border:1px solid rgba(255,255,255,0.06);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .art svg{ width:34px; height:34px; opacity:0.3; }
+
+  .meta{ min-width:0; flex:1; }
+
+  .status-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', 'SF Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--text-dim);
+    margin-bottom:10px;
+    text-transform:lowercase;
+  }
+
+  .dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--amber-dim);
+    flex-shrink:0;
+  }
+
+  .dot.live{
+    background:var(--amber);
+    box-shadow:0 0 8px 1px rgba(255,185,46,0.6);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.55; transform:scale(0.85); }
+  }
+
+  .track{
+    font-size:22px;
+    font-weight:600;
+    line-height:1.25;
+    margin:0 0 4px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+
+  .artist{
+    font-size:15px;
+    color:var(--text-dim);
+    margin:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .bars{
+    display:flex;
+    align-items:flex-end;
+    gap:3px;
+    height:18px;
+    margin-top:14px;
+  }
+
+  .bars span{
+    width:3px;
+    background:var(--teal);
+    border-radius:1px;
+    opacity:0.75;
+  }
+
+  .bars.playing span{ animation:bounce 1.1s ease-in-out infinite; }
+  .bars span:nth-child(1){ animation-delay:0s; }
+  .bars span:nth-child(2){ animation-delay:0.15s; }
+  .bars span:nth-child(3){ animation-delay:0.3s; }
+  .bars span:nth-child(4){ animation-delay:0.1s; }
+  .bars span:nth-child(5){ animation-delay:0.25s; }
+
+  @keyframes bounce{
+    0%,100%{ height:4px; }
+    50%{ height:18px; }
+  }
+
+  .footer{
+    margin-top:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--text-dim);
+    display:flex;
+    justify-content:space-between;
+    letter-spacing:0.04em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot.live, .bars span{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="unit">
+    <div class="screen">
+      <div class="status-line">
+        <span class="dot" id="dot"></span>
+        <span id="statusText">connecting</span>
+      </div>
+
+      <div class="row">
+        <div class="art" id="art">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="2.4" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <p class="track" id="trackName">—</p>
+          <p class="artist" id="artistName">waiting for a signal</p>
+        </div>
+      </div>
+
+      <div class="bars" id="bars">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>arssh2</span>
+      <span id="updated">—</span>
+    </div>
+  </div>
+
+<script>
+  const USER = 'arssh2';
+  const API_KEY = '2aab1059e9b8780dd6a9b3aef05a3108';
+  const POLL_MS = 15000;
+
+  const el = {
+    dot: document.getElementById('dot'),
+    status: document.getElementById('statusText'),
+    art: document.getElementById('art'),
+    track: document.getElementById('trackName'),
+    artist: document.getElementById('artistName'),
+    bars: document.getElementById('bars'),
+    updated: document.getElementById('updated'),
+  };
+
+  const fallbackArt = el.art.innerHTML;
+
+  function timeAgo(unixSeconds){
+    const diff = Math.floor(Date.now()/1000) - unixSeconds;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  async function fetchNowPlaying(){
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=1`;
+    try{
+      const res = await fetch(url);
+      const data = await res.json();
+      const t = data?.recenttracks?.track?.[0];
+
+      if (!t){
+        el.status.textContent = 'no scrobbles yet';
+        el.dot.className = 'dot';
+        return;
+      }
+
+      const isNow = t['@attr']?.nowplaying === 'true';
+      const imgUrl = t.image?.find(i => i.size === 'extralarge')?.['#text']
+                  || t.image?.slice(-1)[0]?.['#text'];
+
+      el.track.textContent = t.name || 'Unknown track';
+      el.artist.textContent = t.artist?.['#text'] || 'Unknown artist';
+
+      if (imgUrl){
+        el.art.style.backgroundImage = `url('${imgUrl}')`;
+        el.art.innerHTML = '';
+      } else {
+        el.art.style.backgroundImage = 'none';
+        el.art.innerHTML = fallbackArt;
+      }
+
+      if (isNow){
+        el.status.textContent = 'now playing';
+        el.dot.className = 'dot live';
+        el.bars.className = 'bars playing';
+      } else {
+        el.status.textContent = 'last played';
+        el.dot.className = 'dot';
+        el.bars.className = 'bars';
+      }
+
+      el.updated.textContent = isNow ? 'live' : (t.date ? timeAgo(t.date.uts) : '');
+
+    } catch(err){
+      el.status.textContent = 'connection error';
+      el.dot.className = 'dot';
+      el.updated.textContent = 'retrying…';
+    }
+  }
+
+  fetchNowPlaying();
+  setInterval(fetchNowPlaying, POLL_MS);
+</script>
+
+</body>
+</html>
