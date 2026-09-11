@@ -227,7 +227,7 @@
 <script>
   const USER = 'arssh2';
   const API_KEY = '2aab1059e9b8780dd6a9b3aef05a3108';
-  const POLL_MS = 15000;
+  const POLL_MS = 5000;
 
   const el = {
     dot: document.getElementById('dot'),
@@ -269,9 +269,9 @@
   }
 
   async function fetchNowPlaying(){
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=1`;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=1&_=${Date.now()}`;
     try{
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       const data = await res.json();
       const t = data?.recenttracks?.track?.[0];
 
@@ -324,6 +324,10 @@
 
   fetchNowPlaying();
   setInterval(fetchNowPlaying, POLL_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') fetchNowPlaying();
+  });
 </script>
 
 </body>
