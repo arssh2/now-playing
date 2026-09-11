@@ -39,11 +39,11 @@
 
   .unit{
     width:100%;
-    max-width:520px;
+    max-width:720px;
     background:linear-gradient(180deg, #171c1e, #101315);
     border:1px solid var(--panel-edge);
-    border-radius:18px;
-    padding:20px;
+    border-radius:22px;
+    padding:28px;
     box-shadow:
       0 40px 80px -30px rgba(0,0,0,0.7),
       inset 0 1px 0 rgba(255,255,255,0.04);
@@ -51,12 +51,12 @@
 
   .screen{
     background:var(--panel);
-    border-radius:12px;
+    border-radius:16px;
     border:1px solid var(--panel-edge);
-    padding:24px;
+    padding:34px;
     position:relative;
     overflow:hidden;
-    min-height:220px;
+    min-height:280px;
   }
 
   .screen::before{
@@ -80,9 +80,9 @@
   }
 
   .art{
-    width:88px;
-    height:88px;
-    border-radius:8px;
+    width:128px;
+    height:128px;
+    border-radius:10px;
     flex-shrink:0;
     background:#1c2225;
     background-size:cover;
@@ -93,25 +93,25 @@
     justify-content:center;
   }
 
-  .art svg{ width:34px; height:34px; opacity:0.3; }
+  .art svg{ width:48px; height:48px; opacity:0.3; }
 
   .meta{ min-width:0; flex:1; }
 
   .status-line{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:10px;
     font-family:'IBM Plex Mono', 'SF Mono', monospace;
-    font-size:11px;
+    font-size:14px;
     letter-spacing:0.06em;
     color:var(--text-dim);
-    margin-bottom:10px;
+    margin-bottom:16px;
     text-transform:lowercase;
   }
 
   .dot{
-    width:7px;
-    height:7px;
+    width:9px;
+    height:9px;
     border-radius:50%;
     background:var(--amber-dim);
     flex-shrink:0;
@@ -129,10 +129,10 @@
   }
 
   .track{
-    font-size:22px;
+    font-size:32px;
     font-weight:600;
     line-height:1.25;
-    margin:0 0 4px;
+    margin:0 0 6px;
     overflow:hidden;
     text-overflow:ellipsis;
     display:-webkit-box;
@@ -141,7 +141,7 @@
   }
 
   .artist{
-    font-size:15px;
+    font-size:20px;
     color:var(--text-dim);
     margin:0;
     white-space:nowrap;
@@ -152,13 +152,13 @@
   .bars{
     display:flex;
     align-items:flex-end;
-    gap:3px;
-    height:18px;
-    margin-top:14px;
+    gap:4px;
+    height:26px;
+    margin-top:20px;
   }
 
   .bars span{
-    width:3px;
+    width:4px;
     background:var(--teal);
     border-radius:1px;
     opacity:0.75;
@@ -172,14 +172,14 @@
   .bars span:nth-child(5){ animation-delay:0.25s; }
 
   @keyframes bounce{
-    0%,100%{ height:4px; }
-    50%{ height:18px; }
+    0%,100%{ height:6px; }
+    50%{ height:26px; }
   }
 
   .footer{
-    margin-top:18px;
+    margin-top:24px;
     font-family:'IBM Plex Mono', monospace;
-    font-size:10.5px;
+    font-size:13px;
     color:var(--text-dim);
     display:flex;
     justify-content:space-between;
@@ -249,6 +249,25 @@
     return Math.floor(diff/86400) + 'd ago';
   }
 
+  const artCache = {};
+
+  async function fetchArtworkFallback(artist, track){
+    const key = `${artist}|${track}`.toLowerCase();
+    if (artCache[key] !== undefined) return artCache[key];
+
+    try{
+      const q = encodeURIComponent(`${artist} ${track}`);
+      const res = await fetch(`https://itunes.apple.com/search?term=${q}&entity=song&limit=1`);
+      const data = await res.json();
+      const raw = data?.results?.[0]?.artworkUrl100;
+      const url = raw ? raw.replace('100x100bb', '600x600bb') : null;
+      artCache[key] = url;
+      return url;
+    } catch(e){
+      return null;
+    }
+  }
+
   async function fetchNowPlaying(){
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=1`;
     try{
@@ -263,11 +282,18 @@
       }
 
       const isNow = t['@attr']?.nowplaying === 'true';
-      const imgUrl = t.image?.find(i => i.size === 'extralarge')?.['#text']
-                  || t.image?.slice(-1)[0]?.['#text'];
+      const trackTitle = t.name || 'Unknown track';
+      const artistName = t.artist?.['#text'] || 'Unknown artist';
 
-      el.track.textContent = t.name || 'Unknown track';
-      el.artist.textContent = t.artist?.['#text'] || 'Unknown artist';
+      el.track.textContent = trackTitle;
+      el.artist.textContent = artistName;
+
+      let imgUrl = t.image?.find(i => i.size === 'extralarge')?.['#text']
+                || t.image?.slice(-1)[0]?.['#text'];
+
+      if (!imgUrl){
+        imgUrl = await fetchArtworkFallback(artistName, trackTitle);
+      }
 
       if (imgUrl){
         el.art.style.backgroundImage = `url('${imgUrl}')`;
