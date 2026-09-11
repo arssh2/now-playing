@@ -405,7 +405,8 @@
   async function fetchLyricsData(artist, title){
     const key = `${artist}|${title}`.toLowerCase();
     if (lyricsCache[key] !== undefined) return lyricsCache[key];
-    let result = { synced: null, plain: null };
+    let result = { synced: null, plain: null, notFound: false };
+
     try{
       const res = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`);
       if (res.ok){
@@ -413,7 +414,24 @@
         if (data.syncedLyrics) result.synced = parseLRC(data.syncedLyrics);
         if (data.plainLyrics) result.plain = data.plainLyrics.trim();
       }
-    } catch(e){ /* fall through with nulls */ }
+    } catch(e){ /* fall through to search */ }
+
+    if (!result.synced && !result.plain){
+      try{
+        const q = encodeURIComponent(`${artist} ${title}`);
+        const res2 = await fetch(`https://lrclib.net/api/search?q=${q}`);
+        if (res2.ok){
+          const list = await res2.json();
+          const best = Array.isArray(list) ? list.find(x => x.syncedLyrics || x.plainLyrics) : null;
+          if (best){
+            if (best.syncedLyrics) result.synced = parseLRC(best.syncedLyrics);
+            if (best.plainLyrics) result.plain = best.plainLyrics.trim();
+          }
+        }
+      } catch(e){ /* give up, leave nulls */ }
+    }
+
+    result.notFound = !result.synced && !result.plain;
     lyricsCache[key] = result;
     return result;
   }
@@ -520,7 +538,8 @@
             el.lyrics.textContent = plain;
             el.lyrics.classList.remove('empty');
           } else {
-            el.lyrics.classList.add('empty');
+            el.lyrics.textContent = 'no lyrics found for this track';
+            el.lyrics.classList.remove('empty');
           }
         });
       }
