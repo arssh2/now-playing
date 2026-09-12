@@ -267,6 +267,8 @@
     .status-line{ font-size:12px; margin-bottom:12px; }
     .footer{ font-size:11px; margin-top:16px; }
     .lyrics{ font-size:13px; max-height:140px; margin-top:16px; padding-top:14px; }
+    .bg-layer{ filter:blur(36px) brightness(0.42) saturate(1.4); }
+    .particle:nth-child(n+13){ display:none; }
   }
 
   @media (max-width: 360px){
@@ -359,7 +361,7 @@
     padding:10px 12px;
     color:var(--text);
     font-family:inherit;
-    font-size:14px;
+    font-size:16px;
     outline:none;
   }
 
@@ -540,8 +542,6 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZGF0a3B3anN5dWhzdnRncHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTMyMTMsImV4cCI6MjEwNDcyOTIxM30.5C3DVIEU5tyOK9RiX5CQVG7EQ3ntYumZ4V7MQn6Zx84';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const USER = 'arssh2';
-  const API_KEY = '2aab1059e9b8780dd6a9b3aef05a3108';
   const POLL_MS = 1000;
 
   const el = {
@@ -563,7 +563,6 @@
   };
 
   let trackDurationSec = null;
-  const durationCache = {};
 
   function formatTime(sec){
     sec = Math.max(0, Math.floor(sec));
@@ -572,27 +571,12 @@
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  async function fetchTrackDuration(artist, title){
-    const key = `${artist}|${title}`.toLowerCase();
-    if (durationCache[key] !== undefined) return durationCache[key];
-    try{
-      const url = `https://ws.audioscrobbler.com/2.0/?method=track.getinfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&api_key=${API_KEY}&format=json`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const ms = parseInt(data?.track?.duration, 10);
-      const sec = (ms && ms > 0) ? ms / 1000 : null;
-      durationCache[key] = sec;
-      return sec;
-    } catch(e){
-      durationCache[key] = null;
-      return null;
-    }
-  }
-
   let bgActive = 'A';
   let lastTrackKey = null;
   let syncedLines = null;
-  let trackStartMs = null;
+  let playStartMs = null;
+  let accumulatedElapsedSec = 0;
+  let wasPlaying = false;
   let activeLine = -1;
   let isCurrentlyPlaying = false;
 
@@ -689,14 +673,6 @@
     return result;
   }
 
-  function timeAgo(unixSeconds){
-    const diff = Math.floor(Date.now()/1000) - unixSeconds;
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-    return Math.floor(diff/86400) + 'd ago';
-  }
-
   const artCache = {};
 
   async function fetchArtworkFallback(artist, track){
@@ -716,29 +692,42 @@
     }
   }
 
-  async function fetchNowPlaying(){
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=1&_=${Date.now()}`;
-    try{
-      const res = await fetch(url, { cache: 'no-store' });
-      const data = await res.json();
-      const t = data?.recenttracks?.track?.[0];
+  const WORKER_URL = 'https://icy-dust-0e5d.aarssh7.workers.dev/';
 
-      if (!t){
-        el.status.textContent = 'no scrobbles yet';
+  async function fetchNowPlaying(){
+    try{
+      const res = await fetch(`${WORKER_URL}?_=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+
+      if (data.error){
+        el.status.textContent = 'connection error';
         el.dot.className = 'dot';
         return;
       }
 
-      const isNow = t['@attr']?.nowplaying === 'true';
-      const trackTitle = t.name || 'Unknown track';
-      const artistName = t.artist?.['#text'] || 'Unknown artist';
+      const isNow = !!data.is_playing;
+
+      if (!data.track){
+        el.status.textContent = isNow ? 'now playing' : 'not listening right now';
+        el.dot.className = isNow ? 'dot live' : 'dot';
+        isCurrentlyPlaying = false;
+        el.progressWrap.style.display = 'none';
+        stopEqualizer();
+        return;
+      }
+
+      const trackTitle = data.track;
+      const artistName = data.artist || 'Unknown artist';
       const trackKey = `${artistName}|${trackTitle}`.toLowerCase();
       const isNewTrack = trackKey !== lastTrackKey;
       lastTrackKey = trackKey;
 
-      let imgUrl = t.image?.find(i => i.size === 'extralarge')?.['#text']
-                || t.image?.slice(-1)[0]?.['#text'];
+      // exact position straight from Spotify — recalibrated every single poll, no drift possible
+      accumulatedElapsedSec = (data.progress_ms || 0) / 1000;
+      playStartMs = isNow ? Date.now() : null;
+      wasPlaying = isNow;
 
+      let imgUrl = data.album_art || null;
       if (!imgUrl){
         imgUrl = await fetchArtworkFallback(artistName, trackTitle);
       }
@@ -771,24 +760,17 @@
         });
       }
 
+      // exact duration straight from Spotify — no separate lookup needed
+      trackDurationSec = data.duration_ms ? data.duration_ms / 1000 : null;
+      if (trackDurationSec){
+        el.totalTime.textContent = formatTime(trackDurationSec);
+      }
+
       if (isNewTrack){
         el.lyrics.classList.add('empty');
         el.lyrics.innerHTML = '';
         syncedLines = null;
         activeLine = -1;
-        trackStartMs = Date.now();
-        trackDurationSec = null;
-        el.progressWrap.style.display = 'none';
-        el.progressFill.style.width = '0%';
-
-        fetchTrackDuration(artistName, trackTitle).then(sec => {
-          if (trackKey !== lastTrackKey) return;
-          if (sec){
-            trackDurationSec = sec;
-            el.totalTime.textContent = formatTime(sec);
-            if (isCurrentlyPlaying) el.progressWrap.style.display = 'block';
-          }
-        });
 
         fetchLyricsData(artistName, trackTitle).then(({ synced, plain }) => {
           if (trackKey !== lastTrackKey) return; // track moved on before this resolved
@@ -814,14 +796,14 @@
         el.dot.className = 'dot live';
         startEqualizer();
       } else {
-        el.status.textContent = 'last played';
+        el.status.textContent = 'paused';
         el.dot.className = 'dot';
         stopEqualizer();
       }
       isCurrentlyPlaying = isNow;
-      if (!isNow) el.progressWrap.style.display = 'none';
+      el.progressWrap.style.display = trackDurationSec ? 'block' : 'none';
 
-      el.updated.textContent = isNow ? 'live' : (t.date ? timeAgo(t.date.uts) : '');
+      el.updated.textContent = isNow ? 'live' : 'paused';
 
     } catch(err){
       el.status.textContent = 'connection error';
@@ -830,20 +812,24 @@
     }
   }
 
+  function currentElapsedSec(){
+    return accumulatedElapsedSec + (playStartMs ? (Date.now() - playStartMs) / 1000 : 0);
+  }
+
   function tickLyrics(){
     if (!isCurrentlyPlaying){
       return; // don't advance progress/lyrics for a track that isn't actually live
     }
 
-    if (trackStartMs && trackDurationSec){
-      const elapsed = (Date.now() - trackStartMs) / 1000;
+    const elapsed = currentElapsedSec();
+
+    if (trackDurationSec){
       const pct = Math.min(100, (elapsed / trackDurationSec) * 100);
       el.progressFill.style.width = pct + '%';
       el.elapsedTime.textContent = formatTime(Math.min(elapsed, trackDurationSec));
     }
 
-    if (!syncedLines || !trackStartMs) return;
-    const elapsed = (Date.now() - trackStartMs) / 1000;
+    if (!syncedLines) return;
     let idx = -1;
     for (let i = 0; i < syncedLines.length; i++){
       if (syncedLines[i].time <= elapsed) idx = i; else break;
