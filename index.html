@@ -594,6 +594,7 @@
   let syncedLines = null;
   let trackStartMs = null;
   let activeLine = -1;
+  let isCurrentlyPlaying = false;
 
   const fallbackArt = el.art.innerHTML;
 
@@ -785,7 +786,7 @@
           if (sec){
             trackDurationSec = sec;
             el.totalTime.textContent = formatTime(sec);
-            el.progressWrap.style.display = 'block';
+            if (isCurrentlyPlaying) el.progressWrap.style.display = 'block';
           }
         });
 
@@ -817,6 +818,8 @@
         el.dot.className = 'dot';
         stopEqualizer();
       }
+      isCurrentlyPlaying = isNow;
+      if (!isNow) el.progressWrap.style.display = 'none';
 
       el.updated.textContent = isNow ? 'live' : (t.date ? timeAgo(t.date.uts) : '');
 
@@ -828,6 +831,10 @@
   }
 
   function tickLyrics(){
+    if (!isCurrentlyPlaying){
+      return; // don't advance progress/lyrics for a track that isn't actually live
+    }
+
     if (trackStartMs && trackDurationSec){
       const elapsed = (Date.now() - trackStartMs) / 1000;
       const pct = Math.min(100, (elapsed / trackDurationSec) * 100);
