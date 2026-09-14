@@ -1041,31 +1041,61 @@
   qEl.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const song = qEl.song.value.trim();
+    const artist = qEl.artist.value.trim();
     if (!song) return;
 
     qEl.submit.disabled = true;
     qEl.status.textContent = 'adding…';
 
+    let displayOk = false;
     try{
       const { error } = await sb.from('queue').insert({
         song: song,
-        artist: qEl.artist.value.trim() || null,
+        artist: artist || null,
         requester: qEl.name.value.trim() || null,
       });
+      displayOk = !error;
+    } catch(e){
+      displayOk = false;
+    }
 
-      if (error){
-        qEl.status.textContent = 'could not add — try again';
+    let spotifyStatus = null;
+    try{
+      const q = new URLSearchParams({ action: 'queue', song, artist });
+      const res = await fetch(`${WORKER_URL}?${q.toString()}`);
+      const data = await res.json();
+      if (data.success){
+        spotifyStatus = 'queued';
+      } else if (data.error === 'no_active_device'){
+        spotifyStatus = 'no_device';
+      } else if (data.error === 'track_not_found'){
+        spotifyStatus = 'not_found';
       } else {
-        qEl.status.textContent = 'added to the queue';
-        qEl.form.reset();
-        loadQueue();
+        spotifyStatus = 'failed';
       }
     } catch(e){
+      spotifyStatus = 'failed';
+    }
+
+    if (spotifyStatus === 'queued'){
+      qEl.status.textContent = 'added to Spotify queue!';
+    } else if (spotifyStatus === 'no_device'){
+      qEl.status.textContent = displayOk ? 'added to list (Spotify not active right now)' : 'could not add — try again';
+    } else if (spotifyStatus === 'not_found'){
+      qEl.status.textContent = displayOk ? 'added to list (couldn\'t find exact song on Spotify)' : 'could not add — try again';
+    } else if (displayOk){
+      qEl.status.textContent = 'added to the queue';
+    } else {
       qEl.status.textContent = 'could not add — try again';
     }
 
+    if (displayOk){
+      qEl.form.reset();
+      loadQueue();
+    }
+
     qEl.submit.disabled = false;
-    setTimeout(() => { qEl.status.textContent = ''; }, 3000);
+    setTimeout(() => { qEl.status.textContent = ''; }, 4000);
   });
 
   loadQueue();
