@@ -170,6 +170,28 @@
     animation:pulse 1.8s ease-in-out infinite;
   }
 
+  .skip-btn{
+    margin-left:auto;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-edge);
+    color:var(--text-dim);
+    border-radius:8px;
+    padding:7px 14px;
+    font-size:17px;
+    cursor:pointer;
+    transition:background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .skip-btn:hover{
+    background:rgba(255,255,255,0.12);
+    color:var(--text);
+  }
+
+  .skip-btn:disabled{
+    opacity:0.4;
+    cursor:default;
+  }
+
   @keyframes pulse{
     0%,100%{ opacity:1; transform:scale(1); }
     50%{ opacity:0.55; transform:scale(0.85); }
@@ -481,6 +503,7 @@
       <div class="status-line">
         <span class="dot" id="dot"></span>
         <span id="statusText">connecting</span>
+        <button id="skipBtn" class="skip-btn" title="Skip this song">⏭</button>
       </div>
 
       <div class="row">
@@ -1100,6 +1123,25 @@
 
   loadQueue();
   setInterval(loadQueue, 1000);
+
+  // --- skip button ---
+  const skipBtn = document.getElementById('skipBtn');
+  skipBtn.addEventListener('click', async () => {
+    skipBtn.disabled = true;
+    const original = skipBtn.textContent;
+    skipBtn.textContent = '…';
+    try{
+      const res = await fetch(`${WORKER_URL}?action=skip`);
+      const data = await res.json();
+      skipBtn.textContent = data.success ? '✓' : '✕';
+    } catch(e){
+      skipBtn.textContent = '✕';
+    }
+    setTimeout(() => {
+      skipBtn.textContent = original;
+      skipBtn.disabled = false;
+    }, 1500);
+  });
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') fetchNowPlaying();
