@@ -6,15 +6,17 @@
 <title>arssh2 — now playing</title>
 <style>
   :root{
-    --asphalt: #0a0c0d;
-    --panel: #14181a;
-    --panel-edge: #1f2528;
-    --amber: #ffb92e;
-    --amber-dim: #8a641c;
-    --teal: #2dd4bf;
-    --text: #e8e8e6;
-    --text-dim: #7a8286;
-    --accent: 255,185,46;
+    --asphalt: #0a1712;
+    --panel: #0f221a;
+    --panel-edge: #c9a24b;
+    --amber: #c9a24b;
+    --amber-dim: #6b5527;
+    --teal: #c9a24b;
+    --text: #f2e6c9;
+    --text-dim: #9a8a5e;
+    --accent: 201,162,75;
+    --warm: #c9a24b;
+    --cream: #0f221a;
   }
 
   *{box-sizing:border-box;}
@@ -61,6 +63,8 @@
     pointer-events:none;
   }
 
+  .grid-horizon{ display:none; }
+
   @font-face{
     font-family:'Space Grotesk';
     src:local('Space Grotesk');
@@ -71,16 +75,13 @@
     z-index:2;
     width:100%;
     max-width:720px;
-    background:linear-gradient(180deg, rgba(23,28,30,0.88), rgba(16,19,21,0.92));
-    backdrop-filter:blur(6px);
+    background:#0d1e17;
     border:1px solid var(--panel-edge);
-    border-radius:22px;
+    border-radius:6px;
     padding:28px;
     box-shadow:
-      0 40px 80px -30px rgba(0,0,0,0.7),
-      0 0 60px -20px rgba(var(--accent), 0.25),
-      inset 0 1px 0 rgba(255,255,255,0.04);
-    transition:box-shadow 1.4s ease;
+      0 30px 70px -25px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(201,162,75,0.15);
     animation:riseIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -91,7 +92,7 @@
 
   .screen{
     background:var(--panel);
-    border-radius:16px;
+    border-radius:4px;
     border:1px solid var(--panel-edge);
     padding:34px;
     position:relative;
@@ -123,18 +124,18 @@
   .art{
     width:128px;
     height:128px;
-    border-radius:10px;
+    border-radius:4px;
     flex-shrink:0;
     background:#1c2225;
     background-size:cover;
     background-position:center;
-    border:1px solid rgba(255,255,255,0.06);
+    border:1px solid var(--panel-edge);
     display:flex;
     align-items:center;
     justify-content:center;
     transition:opacity 0.5s ease, transform 0.15s ease-out;
     transform-style:preserve-3d;
-    box-shadow:0 14px 30px -10px rgba(0,0,0,0.5);
+    box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);
   }
 
   .meta{ min-width:0; flex:1; transition:opacity 0.5s ease; }
@@ -148,11 +149,21 @@
     align-items:center;
     gap:10px;
     font-family:'IBM Plex Mono', 'SF Mono', monospace;
-    font-size:14px;
+    font-size:12px;
     letter-spacing:0.06em;
     color:var(--text-dim);
     margin-bottom:16px;
-    text-transform:lowercase;
+    text-transform:uppercase;
+  }
+
+  #statusText{
+    background:var(--cream);
+    color:var(--warm);
+    border:1px solid var(--panel-edge);
+    padding:2px 8px;
+    border-radius:2px;
+    font-weight:500;
+    letter-spacing:0.08em;
   }
 
   .dot{
@@ -172,19 +183,19 @@
 
   .skip-btn{
     margin-left:auto;
-    background:rgba(255,255,255,0.06);
+    background:transparent;
     border:1px solid var(--panel-edge);
-    color:var(--text-dim);
-    border-radius:8px;
-    padding:7px 14px;
-    font-size:17px;
+    color:var(--warm);
+    border-radius:3px;
+    padding:6px 13px;
+    font-size:16px;
     cursor:pointer;
-    transition:background-color 0.2s ease, color 0.2s ease;
+    transition:background-color 0.15s ease;
   }
 
   .skip-btn:hover{
-    background:rgba(255,255,255,0.12);
-    color:var(--text);
+    background:rgba(201,162,75,0.12);
+    color:var(--warm);
   }
 
   .skip-btn:disabled{
@@ -208,6 +219,8 @@
     display:-webkit-box;
     -webkit-line-clamp:2;
     -webkit-box-orient:vertical;
+    text-shadow:none;
+    letter-spacing:0.01em;
   }
 
   .artist{
@@ -377,9 +390,9 @@
 
   .request-form input{
     flex:1 1 140px;
-    background:rgba(255,255,255,0.04);
+    background:rgba(255,255,255,0.03);
     border:1px solid var(--panel-edge);
-    border-radius:8px;
+    border-radius:3px;
     padding:10px 12px;
     color:var(--text);
     font-family:inherit;
@@ -389,21 +402,24 @@
 
   .request-form input::placeholder{ color:var(--text-dim); }
 
-  .request-form input:focus{ border-color:rgba(var(--accent), 0.6); }
+  .request-form input:focus{ border-color:var(--warm); }
 
   .request-form button{
     flex:1 1 100%;
-    background:rgb(var(--accent));
-    border:none;
-    border-radius:8px;
+    background:var(--warm);
+    border:1px solid var(--warm);
+    border-radius:3px;
     padding:11px;
-    color:#0a0c0d;
+    color:#0a1712;
     font-weight:600;
     font-family:inherit;
     font-size:14px;
     cursor:pointer;
-    transition:opacity 0.2s ease;
+    letter-spacing:0.04em;
+    transition:opacity 0.15s ease;
   }
+
+  .request-form button:hover{ opacity:0.85; }
 
   .request-form button:disabled{ opacity:0.5; cursor:default; }
 
@@ -496,6 +512,7 @@
   <div class="bg-layer" id="bgA"></div>
   <div class="bg-layer" id="bgB"></div>
   <div class="scrim"></div>
+  <div class="grid-horizon"></div>
   <div class="particles" id="particles"></div>
 
   <div class="unit">
