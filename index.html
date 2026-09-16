@@ -889,20 +889,7 @@
 
       if (isNewTrack){
         el.genreIcon.innerHTML = iconForGenre(data.genre);
-
-        el.decoPattern.classList.remove('show');
-        const artColorPromise = imgUrl ? extractDominantColor(imgUrl) : Promise.resolve(null);
-        artColorPromise.then(rgb => {
-          if (trackKey !== lastTrackKey) return;
-          if (rgb){
-            el.decoPattern.style.background = `radial-gradient(circle at 30% 15%, rgba(${rgb},0.28), transparent 60%)`;
-            setTimeout(() => el.decoPattern.classList.add('show'), 150);
-            const fullColor = `rgb(${rgb})`;
-            document.documentElement.style.setProperty('--accent', rgb);
-            document.documentElement.style.setProperty('--warm', fullColor);
-            // --panel-edge stays fixed cyan — keeps the card's identity consistent across songs
-          }
-        });
+        // colors stay fixed to the synthwave theme — no longer shift per song's album art
       }
 
       // exact duration straight from Spotify — no separate lookup needed
