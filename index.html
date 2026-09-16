@@ -127,6 +127,43 @@
     to{ opacity:1; transform:translateY(0); }
   }
 
+  .crt-boot{
+    position:fixed;
+    inset:0;
+    z-index:999;
+    background:#fff;
+    pointer-events:none;
+    animation:crtPowerOn 0.7s ease-out forwards;
+    transform-origin:center;
+  }
+
+  @keyframes crtPowerOn{
+    0%{ transform:scaleY(0.002); opacity:1; }
+    12%{ transform:scaleY(0.015); opacity:1; }
+    22%{ transform:scaleY(1); opacity:1; }
+    100%{ transform:scaleY(1); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .crt-boot{ animation:none !important; opacity:0 !important; }
+  }
+
+  @keyframes glitchFlicker{
+    0%{ transform:translate(0); text-shadow:0 0 14px rgba(var(--accent), 0.7), 0 0 28px rgba(var(--accent), 0.35); }
+    10%{ transform:translate(-2px,1px); text-shadow:2px 0 #ff2ec4, -2px 0 #2ee8ff; }
+    20%{ transform:translate(2px,-1px); text-shadow:-2px 0 #ff2ec4, 2px 0 #2ee8ff; }
+    30%{ transform:translate(-1px,0); text-shadow:1px 0 #ff2ec4, -1px 0 #2ee8ff; }
+    45%{ transform:translate(1px,1px); text-shadow:-1px 0 #ff2ec4, 1px 0 #2ee8ff; }
+    60%{ transform:translate(0); text-shadow:0 0 14px rgba(var(--accent), 0.7), 0 0 28px rgba(var(--accent), 0.35); }
+    100%{ transform:translate(0); text-shadow:0 0 14px rgba(var(--accent), 0.7), 0 0 28px rgba(var(--accent), 0.35); }
+  }
+
+  .track.glitch{ animation:glitchFlicker 0.45s steps(2, end); }
+
+  @media (prefers-reduced-motion: reduce){
+    .track.glitch{ animation:none !important; }
+  }
+
   .screen{
     background:var(--panel);
     border-radius:4px;
@@ -189,6 +226,30 @@
     transition:opacity 0.5s ease, transform 0.15s ease-out;
     transform-style:preserve-3d;
     box-shadow:0 10px 24px -8px rgba(0,0,0,0.5);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .art::before, .art::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background-image:var(--art-img);
+    background-size:cover;
+    background-position:center;
+    mix-blend-mode:screen;
+    opacity:0.45;
+    pointer-events:none;
+  }
+
+  .art::before{
+    transform:translate(-1.5px,0);
+    filter:sepia(1) saturate(6) hue-rotate(-50deg) brightness(1.2);
+  }
+
+  .art::after{
+    transform:translate(1.5px,0);
+    filter:sepia(1) saturate(6) hue-rotate(140deg) brightness(1.2);
   }
 
   .meta{ min-width:0; flex:1; transition:opacity 0.5s ease; }
@@ -569,6 +630,8 @@
 </head>
 <body>
 
+  <div class="crt-boot" id="crtBoot"></div>
+
   <div class="bg-layer" id="bgA"></div>
   <div class="bg-layer" id="bgB"></div>
   <div class="scrim"></div>
@@ -872,14 +935,21 @@
 
         if (imgUrl){
           el.art.style.backgroundImage = `url('${imgUrl}')`;
+          el.art.style.setProperty('--art-img', `url('${imgUrl}')`);
           el.art.innerHTML = '';
         } else {
           el.art.style.backgroundImage = 'none';
+          el.art.style.setProperty('--art-img', 'none');
           el.art.innerHTML = fallbackArt;
         }
 
         el.meta.classList.remove('fade-out');
         el.art.classList.remove('fade-out');
+
+        if (isNewTrack){
+          el.track.classList.add('glitch');
+          setTimeout(() => el.track.classList.remove('glitch'), 450);
+        }
       }, isNewTrack ? 350 : 0);
 
       if (isNewTrack && imgUrl){
