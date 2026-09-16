@@ -483,61 +483,115 @@
     100%{ transform:translateY(-115vh) translateX(var(--drift, 20px)); opacity:0; }
   }
 
-  .hologram{
-    position:fixed;
-    right:2%;
-    bottom:0;
-    width:min(26vw, 260px);
-    height:78vh;
-    z-index:1;
-    pointer-events:none;
-    opacity:0.4;
-    filter:drop-shadow(0 0 18px rgba(46,232,255,0.35)) drop-shadow(0 0 34px rgba(255,46,196,0.25));
-    animation:holoFlicker 5s ease-in-out infinite;
-  }
-
-  .hologram svg{
-    width:100%;
-    height:100%;
-    display:block;
-  }
-
-  .hologram::before{
-    content:'';
-    position:absolute;
-    inset:0;
-    background:repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.08) 0px,
-      rgba(255,255,255,0.08) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-    mix-blend-mode:overlay;
-  }
-
-  @keyframes holoFlicker{
-    0%, 100%{ opacity:0.4; }
-    3%{ opacity:0.15; }
-    6%{ opacity:0.42; }
-    8%{ opacity:0.1; }
-    10%{ opacity:0.4; }
-    45%{ opacity:0.4; }
-    47%{ opacity:0.2; }
-    49%{ opacity:0.4; }
-    70%{ opacity:0.38; }
-    72%{ opacity:0.44; }
-    100%{ opacity:0.4; }
-  }
-
-  @media (max-width: 700px){
-    .hologram{ display:none; }
-  }
-
   @media (prefers-reduced-motion: reduce){
     .dot.live, .bg-layer, .unit, .unit::after{ animation:none !important; }
     .particle{ animation:none !important; opacity:0 !important; }
-    .hologram{ animation:none !important; opacity:0.3 !important; }
+  }
+
+  .circuit-trace{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+    opacity:0.12;
+    pointer-events:none;
+  }
+
+  .vhs-roll{
+    position:fixed;
+    left:0;
+    right:0;
+    height:70px;
+    z-index:1;
+    pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(46,232,255,0.12) 40%, rgba(255,46,196,0.1) 60%, transparent);
+    animation:vhsRoll 11s linear infinite;
+    mix-blend-mode:screen;
+  }
+
+  @keyframes vhsRoll{
+    0%{ top:-70px; }
+    100%{ top:100vh; }
+  }
+
+  .glitch-blocks{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
+
+  .glitch-blocks span{
+    position:absolute;
+    background:rgba(46,232,255,0.5);
+    mix-blend-mode:screen;
+    opacity:0;
+  }
+
+  .glitch-blocks span:nth-child(1){
+    top:22%; left:8%; width:70px; height:10px;
+    animation:glitchBurst 9s steps(1) infinite;
+    animation-delay:1.5s;
+  }
+
+  .glitch-blocks span:nth-child(2){
+    top:64%; right:6%; width:50px; height:16px;
+    background:rgba(255,46,196,0.5);
+    animation:glitchBurst 13s steps(1) infinite;
+    animation-delay:5s;
+  }
+
+  .glitch-blocks span:nth-child(3){
+    top:40%; left:50%; width:90px; height:6px;
+    animation:glitchBurst 16s steps(1) infinite;
+    animation-delay:9s;
+  }
+
+  @keyframes glitchBurst{
+    0%, 96%{ opacity:0; transform:translateX(0); }
+    96.5%{ opacity:0.9; transform:translateX(-6px); }
+    97%{ opacity:0; }
+    97.5%{ opacity:0.8; transform:translateX(8px); }
+    98%{ opacity:0; }
+    100%{ opacity:0; }
+  }
+
+  .glyph-rain{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    overflow:hidden;
+    opacity:0.35;
+  }
+
+  .glyph-col{
+    position:absolute;
+    top:-100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    line-height:1.4;
+    white-space:pre;
+    color:#2ee8ff;
+    text-shadow:0 0 6px currentColor;
+    animation-name:glyphFall;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+  }
+
+  @keyframes glyphFall{
+    0%{ transform:translateY(0); }
+    100%{ transform:translateY(200vh); }
+  }
+
+  @media (max-width: 700px){
+    .circuit-trace, .glyph-rain{ opacity:0.06; }
+    .vhs-roll{ display:none; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .vhs-roll, .glitch-blocks span, .glyph-col{ animation:none !important; opacity:0 !important; }
   }
 
   .queue-section{
@@ -688,24 +742,26 @@
   <div class="bg-layer" id="bgB"></div>
   <div class="scrim"></div>
   <div class="grid-horizon"></div>
-  <div class="particles" id="particles"></div>
-  <div class="hologram" id="hologram">
-    <svg viewBox="0 0 100 200" preserveAspectRatio="xMidYMax meet">
-      <defs>
-        <linearGradient id="holoGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#2ee8ff"/>
-          <stop offset="55%" stop-color="#c060ff"/>
-          <stop offset="100%" stop-color="#ff2ec4"/>
-        </linearGradient>
-        <radialGradient id="holoBeam" cx="50%" cy="100%" r="70%">
-          <stop offset="0%" stop-color="#ff2ec4" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="#ff2ec4" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="50" cy="195" rx="34" ry="7" fill="url(#holoBeam)"/>
-      <path d="M50 18 C58 18 64 26 64 36 C64 44 60 50 55 53 L58 58 C72 64 80 78 80 100 L80 190 C80 194 76 196 72 196 L28 196 C24 196 20 194 20 190 L20 100 C20 78 28 64 42 58 L45 53 C40 50 36 44 36 36 C36 26 42 18 50 18 Z" fill="url(#holoGrad)"/>
-    </svg>
+  <svg class="circuit-trace" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="circuitPattern" width="120" height="120" patternUnits="userSpaceOnUse">
+        <path d="M10 10 H60 V50 H100" fill="none" stroke="#2ee8ff" stroke-width="1"/>
+        <path d="M20 90 H70 V60 H110" fill="none" stroke="#ff2ec4" stroke-width="1"/>
+        <path d="M0 60 H15" fill="none" stroke="#2ee8ff" stroke-width="1"/>
+        <circle cx="60" cy="50" r="2.2" fill="#2ee8ff"/>
+        <circle cx="70" cy="60" r="2.2" fill="#ff2ec4"/>
+        <circle cx="10" cy="10" r="1.6" fill="#2ee8ff"/>
+        <circle cx="20" cy="90" r="1.6" fill="#ff2ec4"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#circuitPattern)"/>
+  </svg>
+  <div class="vhs-roll"></div>
+  <div class="glitch-blocks">
+    <span></span><span></span><span></span>
   </div>
+  <div class="glyph-rain" id="glyphRain"></div>
+  <div class="particles" id="particles"></div>
 
   <div class="unit">
     <div class="scanlines"></div>
@@ -1186,6 +1242,29 @@
       p.style.animationDelay = delay + 's';
       p.style.setProperty('--drift', drift + 'px');
       container.appendChild(p);
+    }
+  })();
+
+  (function spawnGlyphRain(){
+    const container = document.getElementById('glyphRain');
+    const chars = '01<>{}[]/\\|#$%*+=~-'.split('');
+    const colCount = 10;
+    for (let i = 0; i < colCount; i++){
+      const col = document.createElement('div');
+      col.className = 'glyph-col';
+      const left = (i / colCount) * 100 + (Math.random() * 6 - 3);
+      const length = 14 + Math.floor(Math.random() * 12);
+      let text = '';
+      for (let j = 0; j < length; j++){
+        text += chars[Math.floor(Math.random() * chars.length)] + '\n';
+      }
+      col.textContent = text;
+      col.style.left = left + '%';
+      col.style.color = Math.random() > 0.5 ? '#2ee8ff' : '#ff2ec4';
+      const duration = 10 + Math.random() * 14;
+      col.style.animationDuration = duration + 's';
+      col.style.animationDelay = (-Math.random() * duration) + 's';
+      container.appendChild(col);
     }
   })();
 
