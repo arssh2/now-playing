@@ -113,68 +113,6 @@
     to{ opacity:1; transform:translateY(0); }
   }
 
-  .crt-boot{
-    position:fixed;
-    inset:0;
-    z-index:999;
-    background:#f0ecd8;
-    pointer-events:none;
-    animation:crtPowerOn 1.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    transform-origin:center;
-  }
-
-  .crt-boot::before{
-    content:'';
-    position:absolute;
-    inset:0;
-    background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.85) 105%);
-    animation:crtVignette 1.9s ease-out forwards;
-  }
-
-  .crt-degauss{
-    position:fixed;
-    inset:0;
-    z-index:1000;
-    background:#0a0612;
-    pointer-events:none;
-    animation:crtDegauss 1.9s steps(1) forwards;
-  }
-
-  @keyframes crtPowerOn{
-    0%{ transform:scaleY(0.002) scaleX(0.4); opacity:1; }
-    18%{ transform:scaleY(0.006) scaleX(1); opacity:1; }
-    38%{ transform:scaleY(1) scaleX(1); opacity:1; }
-    62%{ transform:scaleY(1) scaleX(1); opacity:1; }
-    100%{ transform:scaleY(1) scaleX(1); opacity:0; }
-  }
-
-  @keyframes crtVignette{
-    0%{ opacity:0; }
-    38%{ opacity:0; }
-    45%{ opacity:1; }
-    62%{ opacity:0.9; }
-    85%{ opacity:0.5; }
-    100%{ opacity:0; }
-  }
-
-  @keyframes crtDegauss{
-    0%, 100%{ opacity:0; }
-    2%{ opacity:1; }
-    4%{ opacity:0; }
-    6%{ opacity:0.8; }
-    8%{ opacity:0; }
-    9%{ opacity:0.6; }
-    10%{ opacity:0; }
-    11%{ opacity:0.3; }
-    12%{ opacity:0; }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .crt-boot{ animation:none !important; opacity:0 !important; }
-    .crt-boot::before{ animation:none !important; opacity:0 !important; }
-    .crt-degauss{ animation:none !important; opacity:0 !important; }
-  }
-
   .intro-overlay{
     position:fixed;
     inset:0;
@@ -831,9 +769,6 @@
 </head>
 <body>
 
-  <div class="crt-degauss"></div>
-  <div class="crt-boot" id="crtBoot"></div>
-
   <div class="intro-overlay" id="introOverlay">
     <div class="intro-card">
       <div class="intro-title">👋 hey, welcome</div>
@@ -1384,7 +1319,7 @@
     if (localStorage.getItem('seenIntro')) return;
     const overlay = document.getElementById('introOverlay');
     const dismiss = document.getElementById('introDismiss');
-    setTimeout(() => overlay.classList.add('show'), 1700);
+    setTimeout(() => overlay.classList.add('show'), 400);
     dismiss.addEventListener('click', () => {
       overlay.classList.remove('show');
       localStorage.setItem('seenIntro', '1');
