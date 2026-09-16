@@ -117,21 +117,120 @@
     position:fixed;
     inset:0;
     z-index:999;
-    background:#fff;
+    background:#f0ecd8;
     pointer-events:none;
-    animation:crtPowerOn 0.7s ease-out forwards;
+    animation:crtPowerOn 1.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     transform-origin:center;
   }
 
+  .crt-boot::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.85) 105%);
+    animation:crtVignette 1.9s ease-out forwards;
+  }
+
+  .crt-degauss{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    background:#0a0612;
+    pointer-events:none;
+    animation:crtDegauss 1.9s steps(1) forwards;
+  }
+
   @keyframes crtPowerOn{
-    0%{ transform:scaleY(0.002); opacity:1; }
-    12%{ transform:scaleY(0.015); opacity:1; }
-    22%{ transform:scaleY(1); opacity:1; }
-    100%{ transform:scaleY(1); opacity:0; }
+    0%{ transform:scaleY(0.002) scaleX(0.4); opacity:1; }
+    18%{ transform:scaleY(0.006) scaleX(1); opacity:1; }
+    38%{ transform:scaleY(1) scaleX(1); opacity:1; }
+    62%{ transform:scaleY(1) scaleX(1); opacity:1; }
+    100%{ transform:scaleY(1) scaleX(1); opacity:0; }
+  }
+
+  @keyframes crtVignette{
+    0%{ opacity:0; }
+    38%{ opacity:0; }
+    45%{ opacity:1; }
+    62%{ opacity:0.9; }
+    85%{ opacity:0.5; }
+    100%{ opacity:0; }
+  }
+
+  @keyframes crtDegauss{
+    0%, 100%{ opacity:0; }
+    2%{ opacity:1; }
+    4%{ opacity:0; }
+    6%{ opacity:0.8; }
+    8%{ opacity:0; }
+    9%{ opacity:0.6; }
+    10%{ opacity:0; }
+    11%{ opacity:0.3; }
+    12%{ opacity:0; }
   }
 
   @media (prefers-reduced-motion: reduce){
     .crt-boot{ animation:none !important; opacity:0 !important; }
+    .crt-boot::before{ animation:none !important; opacity:0 !important; }
+    .crt-degauss{ animation:none !important; opacity:0 !important; }
+  }
+
+  .intro-overlay{
+    position:fixed;
+    inset:0;
+    z-index:998;
+    background:rgba(10,6,18,0.88);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.4s ease;
+  }
+
+  .intro-overlay.show{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .intro-card{
+    max-width:340px;
+    background:var(--shell);
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    padding:24px;
+    box-shadow:0 0 30px rgba(46,232,255,0.3), 0 20px 50px -20px rgba(0,0,0,0.7);
+    font-family:'Space Grotesk', sans-serif;
+    text-align:center;
+  }
+
+  .intro-title{
+    font-size:20px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:14px;
+  }
+
+  .intro-text{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--text-dim);
+    margin:0 0 12px;
+  }
+
+  .intro-btn{
+    margin-top:8px;
+    background:var(--warm);
+    border:1px solid var(--warm);
+    color:var(--asphalt);
+    font-weight:600;
+    font-family:inherit;
+    font-size:14px;
+    padding:10px 24px;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:0.04em;
   }
 
   @keyframes glitchFlicker{
@@ -732,7 +831,17 @@
 </head>
 <body>
 
+  <div class="crt-degauss"></div>
   <div class="crt-boot" id="crtBoot"></div>
+
+  <div class="intro-overlay" id="introOverlay">
+    <div class="intro-card">
+      <div class="intro-title">👋 hey, welcome</div>
+      <p class="intro-text">This shows what's playing live in my car right now — synced straight from Spotify, lyrics and all.</p>
+      <p class="intro-text">Scroll down and request a song — it'll actually get added to the real queue.</p>
+      <button id="introDismiss" class="intro-btn">got it</button>
+    </div>
+  </div>
 
   <div class="bg-layer" id="bgA"></div>
   <div class="bg-layer" id="bgB"></div>
@@ -1268,6 +1377,18 @@
       col.style.animationDelay = (-Math.random() * duration) + 's';
       container.appendChild(col);
     }
+  })();
+
+  // --- first-visit welcome overlay ---
+  (function showIntroOnce(){
+    if (localStorage.getItem('seenIntro')) return;
+    const overlay = document.getElementById('introOverlay');
+    const dismiss = document.getElementById('introDismiss');
+    setTimeout(() => overlay.classList.add('show'), 1700);
+    dismiss.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      localStorage.setItem('seenIntro', '1');
+    });
   })();
 
   fetchNowPlaying();
