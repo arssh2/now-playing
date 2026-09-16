@@ -668,49 +668,6 @@
 
   const fallbackArt = el.art.innerHTML;
 
-  function hashSeed(str){
-    let h = 2166136261;
-    for (let i = 0; i < str.length; i++){
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-  }
-
-  function seededRandom(seed){
-    let s = seed;
-    return function(){
-      s = (s * 1664525 + 1013904223) >>> 0;
-      return s / 4294967296;
-    };
-  }
-
-  function generateDecoPattern(seedStr, strokeColor){
-    const rand = seededRandom(hashSeed(seedStr));
-    const color = strokeColor || 'var(--panel-edge)';
-    const rays = 10 + Math.floor(rand() * 10);
-    const cx = 50 + rand() * 20;
-    const cy = -10 - rand() * 20;
-    const maxR = 130 + rand() * 60;
-    let paths = '';
-    for (let i = 0; i < rays; i++){
-      const a1 = (i / rays) * Math.PI;
-      const a2 = ((i + 0.5) / rays) * Math.PI;
-      const r = maxR * (0.7 + rand() * 0.3);
-      const x1 = cx + Math.cos(a1) * r;
-      const y1 = cy + Math.sin(a1) * r;
-      const x2 = cx + Math.cos(a2) * r * 0.9;
-      const y2 = cy + Math.sin(a2) * r * 0.9;
-      const opacity = (0.5 + rand() * 0.5).toFixed(2);
-      paths += `<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${color}" stroke-width="1" opacity="${i % 2 === 0 ? opacity : opacity * 0.5}"/>`;
-    }
-    const ringCount = 2 + Math.floor(rand() * 3);
-    for (let i = 1; i <= ringCount; i++){
-      paths += `<circle cx="${cx}" cy="${cy}" r="${(maxR * i / ringCount).toFixed(1)}" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.3"/>`;
-    }
-    return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;">${paths}</svg>`;
-  }
-
   const genreIcons = {
     rock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3l6 6M9 3L4 8l6 6M9 3v4M15 9l6-6-5 5M15 9l-6 6 8 8"/></svg>',
     pop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -918,11 +875,10 @@
         const artColorPromise = imgUrl ? extractDominantColor(imgUrl) : Promise.resolve(null);
         artColorPromise.then(rgb => {
           if (trackKey !== lastTrackKey) return;
-          const strokeColor = rgb ? `rgba(${rgb},0.9)` : null;
-          setTimeout(() => {
-            el.decoPattern.innerHTML = generateDecoPattern(trackKey, strokeColor);
-            el.decoPattern.classList.add('show');
-          }, 200);
+          if (rgb){
+            el.decoPattern.style.background = `radial-gradient(circle at 30% 15%, rgba(${rgb},0.28), transparent 60%)`;
+            setTimeout(() => el.decoPattern.classList.add('show'), 150);
+          }
         });
       }
 
