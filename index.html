@@ -236,7 +236,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:opacity 0.5s ease;
+    transition:opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
     box-shadow:0 0 0 3px rgba(0,0,0,0.4);
     position:relative;
     overflow:hidden;
@@ -244,9 +244,13 @@
 
   .art::before, .art::after{ content:none; }
 
-  .meta{ min-width:0; flex:1; transition:opacity 0.5s ease; }
+  .meta{ min-width:0; flex:1; transition:opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease; }
 
-  .fade-out{ opacity:0; }
+  .fade-out{
+    opacity:0;
+    transform:scale(0.97) translateY(3px);
+    filter:blur(3px);
+  }
 
   .art svg{ width:48px; height:48px; opacity:0.3; }
 
@@ -1066,10 +1070,12 @@
         el.art.classList.remove('fade-out');
 
         if (isNewTrack){
-          el.track.classList.add('glitch');
-          setTimeout(() => el.track.classList.remove('glitch'), 450);
+          setTimeout(() => {
+            el.track.classList.add('glitch');
+            setTimeout(() => el.track.classList.remove('glitch'), 450);
+          }, 400);
         }
-      }, isNewTrack ? 350 : 0);
+      }, isNewTrack ? 400 : 0);
 
       if (isNewTrack && imgUrl){
         crossfadeBackground(imgUrl);
