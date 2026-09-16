@@ -42,7 +42,7 @@
     inset:-10%;
     background-size:cover;
     background-position:center;
-    filter:blur(70px) brightness(0.42) saturate(1.4);
+    filter:blur(70px) brightness(0.42) saturate(0.6) sepia(0.6) hue-rotate(45deg) saturate(1.8);
     transform:scale(1.15);
     opacity:0;
     transition:opacity 1.6s ease;
@@ -201,6 +201,13 @@
     letter-spacing:0.08em;
   }
 
+  .genre-icon{
+    color:var(--warm);
+    font-size:15px;
+    opacity:0.85;
+  }
+  .genre-icon svg{ width:15px; height:15px; display:block; }
+
   .dot{
     width:9px;
     height:9px;
@@ -337,7 +344,7 @@
     .status-line{ font-size:12px; margin-bottom:12px; }
     .footer{ font-size:11px; margin-top:16px; }
     .lyrics{ font-size:13px; max-height:140px; margin-top:16px; padding-top:14px; }
-    .bg-layer{ filter:blur(36px) brightness(0.42) saturate(1.4); }
+    .bg-layer{ filter:blur(36px) brightness(0.42) saturate(0.6) sepia(0.6) hue-rotate(45deg) saturate(1.8); }
     .particle:nth-child(n+13){ display:none; }
   }
 
@@ -556,6 +563,7 @@
       <div class="status-line">
         <span class="dot" id="dot"></span>
         <span id="statusText">connecting</span>
+        <span id="genreIcon" class="genre-icon"></span>
         <button id="skipBtn" class="skip-btn" title="Skip this song">⏭</button>
       </div>
 
@@ -637,6 +645,7 @@
     elapsedTime: document.getElementById('elapsedTime'),
     totalTime: document.getElementById('totalTime'),
     decoPattern: document.getElementById('decoPattern'),
+    genreIcon: document.getElementById('genreIcon'),
   };
 
   let trackDurationSec = null;
@@ -676,8 +685,9 @@
     };
   }
 
-  function generateDecoPattern(seedStr){
+  function generateDecoPattern(seedStr, strokeColor){
     const rand = seededRandom(hashSeed(seedStr));
+    const color = strokeColor || 'var(--panel-edge)';
     const rays = 10 + Math.floor(rand() * 10);
     const cx = 50 + rand() * 20;
     const cy = -10 - rand() * 20;
@@ -692,13 +702,37 @@
       const x2 = cx + Math.cos(a2) * r * 0.9;
       const y2 = cy + Math.sin(a2) * r * 0.9;
       const opacity = (0.5 + rand() * 0.5).toFixed(2);
-      paths += `<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="var(--panel-edge)" stroke-width="1" opacity="${i % 2 === 0 ? opacity : opacity * 0.5}"/>`;
+      paths += `<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${color}" stroke-width="1" opacity="${i % 2 === 0 ? opacity : opacity * 0.5}"/>`;
     }
     const ringCount = 2 + Math.floor(rand() * 3);
     for (let i = 1; i <= ringCount; i++){
-      paths += `<circle cx="${cx}" cy="${cy}" r="${(maxR * i / ringCount).toFixed(1)}" fill="none" stroke="var(--panel-edge)" stroke-width="0.5" opacity="0.3"/>`;
+      paths += `<circle cx="${cx}" cy="${cy}" r="${(maxR * i / ringCount).toFixed(1)}" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.3"/>`;
     }
     return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;">${paths}</svg>`;
+  }
+
+  const genreIcons = {
+    rock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3l6 6M9 3L4 8l6 6M9 3v4M15 9l6-6-5 5M15 9l-6 6 8 8"/></svg>',
+    pop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+    hip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="9" width="10" height="7" rx="3"/><path d="M12 16v3M9 4h6v5H9z"/></svg>',
+    rap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="9" width="10" height="7" rx="3"/><path d="M12 16v3M9 4h6v5H9z"/></svg>',
+    electro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
+    house: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
+    jazz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
+    classic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
+    country: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="7" rx="1"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>',
+    indie: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="7" rx="1"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>',
+    metal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8-8 8M20 4l-8 8 8 8" stroke-linecap="round"/></svg>',
+    latin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18" opacity="0.4"/></svg>',
+  };
+
+  function iconForGenre(genre){
+    if (!genre) return '';
+    const g = genre.toLowerCase();
+    for (const key in genreIcons){
+      if (g.includes(key)) return genreIcons[key];
+    }
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>';
   }
 
   const colorCache = {};
@@ -874,15 +908,22 @@
 
       if (isNewTrack && imgUrl){
         crossfadeBackground(imgUrl);
-        // accent color stays fixed to the deco gold theme — no longer shifts per album art
+        // global UI accent stays fixed gold — but the deco pattern uses the real art's color
       }
 
       if (isNewTrack){
+        el.genreIcon.innerHTML = iconForGenre(data.genre);
+
         el.decoPattern.classList.remove('show');
-        setTimeout(() => {
-          el.decoPattern.innerHTML = generateDecoPattern(trackKey);
-          el.decoPattern.classList.add('show');
-        }, 200);
+        const artColorPromise = imgUrl ? extractDominantColor(imgUrl) : Promise.resolve(null);
+        artColorPromise.then(rgb => {
+          if (trackKey !== lastTrackKey) return;
+          const strokeColor = rgb ? `rgba(${rgb},0.9)` : null;
+          setTimeout(() => {
+            el.decoPattern.innerHTML = generateDecoPattern(trackKey, strokeColor);
+            el.decoPattern.classList.add('show');
+          }, 200);
+        });
       }
 
       // exact duration straight from Spotify — no separate lookup needed
