@@ -6,17 +6,18 @@
 <title>arssh2 — now playing</title>
 <style>
   :root{
-    --asphalt: #0a1712;
-    --panel: #0f221a;
-    --panel-edge: #c9a24b;
-    --amber: #c9a24b;
-    --amber-dim: #6b5527;
-    --teal: #c9a24b;
-    --text: #f2e6c9;
-    --text-dim: #9a8a5e;
-    --accent: 201,162,75;
-    --warm: #c9a24b;
-    --cream: #0f221a;
+    --asphalt: #2a1608;
+    --panel: #f4ead8;
+    --panel-edge: #2b2116;
+    --amber: #2b2116;
+    --amber-dim: #8a6a3a;
+    --teal: #2b2116;
+    --text: #2b2116;
+    --text-dim: #8a6a4a;
+    --accent: 232,98,31;
+    --warm: #e8621f;
+    --cream: #f4ead8;
+    --shell: #e8621f;
   }
 
   *{box-sizing:border-box; overflow-wrap:break-word;}
@@ -42,7 +43,7 @@
     inset:-10%;
     background-size:cover;
     background-position:center;
-    filter:blur(70px) brightness(0.42) saturate(0.6) sepia(0.6) hue-rotate(45deg) saturate(1.8);
+    filter:blur(70px) brightness(0.42) saturate(0.6) sepia(0.6) saturate(1.8);
     transform:scale(1.15);
     opacity:0;
     transition:opacity 1.6s ease;
@@ -77,13 +78,13 @@
     z-index:2;
     width:100%;
     max-width:720px;
-    background:#0d1e17;
+    background:var(--shell);
     border:1px solid var(--panel-edge);
     border-radius:6px;
     padding:28px;
     box-shadow:
       0 30px 70px -25px rgba(0,0,0,0.6),
-      inset 0 0 0 1px rgba(201,162,75,0.15);
+      inset 0 0 0 1px rgba(0,0,0,0.15);
     animation:riseIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     overflow:hidden;
   }
@@ -192,8 +193,8 @@
   }
 
   #statusText{
-    background:var(--cream);
-    color:var(--warm);
+    background:var(--panel-edge);
+    color:var(--cream);
     border:1px solid var(--panel-edge);
     padding:2px 8px;
     border-radius:2px;
@@ -344,7 +345,7 @@
     .status-line{ font-size:12px; margin-bottom:12px; }
     .footer{ font-size:11px; margin-top:16px; }
     .lyrics{ font-size:13px; max-height:140px; margin-top:16px; padding-top:14px; }
-    .bg-layer{ filter:blur(36px) brightness(0.42) saturate(0.6) sepia(0.6) hue-rotate(45deg) saturate(1.8); }
+    .bg-layer{ filter:blur(36px) brightness(0.42) saturate(0.6) sepia(0.6) saturate(1.8); }
     .particle:nth-child(n+13){ display:none; }
   }
 
@@ -358,7 +359,7 @@
   .progress-track{
     width:100%;
     height:4px;
-    background:rgba(201,162,75,0.18);
+    background:rgba(232,98,31,0.18);
     border-radius:2px;
     overflow:hidden;
   }
@@ -432,7 +433,7 @@
 
   .request-form input{
     flex:1 1 140px;
-    background:rgba(255,255,255,0.03);
+    background:rgba(0,0,0,0.04);
     border:1px solid var(--panel-edge);
     border-radius:3px;
     padding:10px 12px;
@@ -452,7 +453,7 @@
     border:1px solid var(--warm);
     border-radius:3px;
     padding:11px;
-    color:#0a1712;
+    color:var(--panel-edge);
     font-weight:600;
     font-family:inherit;
     font-size:14px;
@@ -534,7 +535,7 @@
     align-items:baseline;
     gap:10px;
     padding:8px 10px;
-    background:rgba(255,255,255,0.03);
+    background:rgba(0,0,0,0.04);
     border-radius:8px;
     font-size:14px;
   }
