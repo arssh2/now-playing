@@ -766,7 +766,7 @@
         }
       };
       img.onerror = () => { colorCache[imgUrl] = null; resolve(null); };
-      img.src = imgUrl;
+      img.src = `${WORKER_URL}?action=imgproxy&url=${encodeURIComponent(imgUrl)}`;
     });
   }
 
