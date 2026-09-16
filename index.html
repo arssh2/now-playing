@@ -881,9 +881,8 @@
             setTimeout(() => el.decoPattern.classList.add('show'), 150);
             const fullColor = `rgb(${rgb})`;
             document.documentElement.style.setProperty('--accent', rgb);
-            document.documentElement.style.setProperty('--panel-edge', fullColor);
-            document.documentElement.style.setProperty('--teal', fullColor);
             document.documentElement.style.setProperty('--warm', fullColor);
+            // --panel-edge stays fixed cyan — keeps the card's identity consistent across songs
           }
         });
       }
