@@ -679,8 +679,8 @@
           </div>
         </div>
         <div class="meta">
-          <p class="track" id="trackName">—</p>
-          <p class="artist" id="artistName">waiting for a signal</p>
+          <p class="track" id="trackName" dir="auto">—</p>
+          <p class="artist" id="artistName" dir="auto">waiting for a signal</p>
         </div>
       </div>
 
@@ -696,7 +696,7 @@
         </div>
       </div>
 
-      <div class="lyrics empty" id="lyrics"></div>
+      <div class="lyrics empty" id="lyrics" dir="auto"></div>
     </div>
 
     <div class="footer">
@@ -708,11 +708,11 @@
       <div class="queue-label">request a song</div>
       <form id="requestForm" class="request-form">
         <div class="song-input-wrap">
-          <input type="text" id="reqSong" placeholder="song title" required maxlength="120" autocomplete="off">
+          <input type="text" id="reqSong" placeholder="song title" required maxlength="120" autocomplete="off" dir="auto">
           <div class="song-suggestions" id="songSuggestions"></div>
         </div>
-        <input type="text" id="reqArtist" placeholder="artist (optional)" maxlength="120">
-        <input type="text" id="reqName" placeholder="your name (optional)" maxlength="60">
+        <input type="text" id="reqArtist" placeholder="artist (optional)" maxlength="120" dir="auto">
+        <input type="text" id="reqName" placeholder="your name (optional)" maxlength="60" dir="auto">
         <button type="submit" id="reqSubmit">add to queue</button>
       </form>
       <div class="queue-status" id="reqStatus"></div>
@@ -1246,7 +1246,7 @@
 
       qEl.list.innerHTML = data.map(row => `
         <div class="queue-item">
-          <span>
+          <span dir="auto">
             <span class="qi-song">${escapeHtml(row.song)}</span>
             ${row.artist ? `<span class="qi-artist"> — ${escapeHtml(row.artist)}</span>` : ''}
           </span>
