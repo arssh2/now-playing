@@ -500,6 +500,31 @@
     margin-bottom:10px;
   }
 
+  .queue-label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+    margin-bottom:10px;
+  }
+
+  .queue-label-row .queue-label{ margin-bottom:0; }
+
+  .clear-link{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+
+  .clear-link:hover{ color:var(--text); }
+
   .request-form{
     display:flex;
     flex-wrap:wrap;
@@ -717,7 +742,10 @@
       </form>
       <div class="queue-status" id="reqStatus"></div>
 
-      <div class="queue-label" style="margin-top:20px;">up next</div>
+      <div class="queue-label-row">
+        <span class="queue-label">up next</span>
+        <button id="clearQueueBtn" class="clear-link">clear</button>
+      </div>
       <div class="queue-list" id="queueList">
         <div class="queue-empty">nothing queued yet — be the first</div>
       </div>
@@ -1153,6 +1181,11 @@
     });
   })();
 
+  // --- silent visitor logging (check counts anytime in Supabase's dashboard) ---
+  (async () => {
+    try{ await sb.from('visits').insert({}); } catch(e){ /* non-critical */ }
+  })();
+
   fetchNowPlaying();
   setInterval(fetchNowPlaying, POLL_MS);
   setInterval(tickLyrics, 400);
@@ -1257,6 +1290,14 @@
       // leave last known list showing rather than clearing on a transient error
     }
   }
+
+  document.getElementById('clearQueueBtn').addEventListener('click', async () => {
+    if (!confirm('Clear the whole "up next" list? This can\'t be undone.')) return;
+    try{
+      await sb.from('queue').delete().gt('id', 0);
+      loadQueue();
+    } catch(e){ /* non-critical */ }
+  });
 
   qEl.form.addEventListener('submit', async (e) => {
     e.preventDefault();
