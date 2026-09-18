@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>shared drawing wall</title>
+<style>
+  :root{
+    --asphalt: #0a0612;
+    --panel-edge: #2ee8ff;
+    --text: #f2eefc;
+    --text-dim: #a893c4;
+    --warm: #ff2ec4;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html, body{
+    margin:0;
+    height:100%;
+    background:var(--asphalt);
+    color:var(--text);
+    font-family:'Space Grotesk', -apple-system, 'Segoe UI', sans-serif;
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
+
+  .topbar{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    padding-top:max(12px, env(safe-area-inset-top));
+    background:linear-gradient(180deg, rgba(10,6,18,0.9), transparent);
+    pointer-events:none;
+  }
+
+  .topbar *{ pointer-events:auto; }
+
+  .title{
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.02em;
+  }
+
+  .title span{
+    color:var(--text-dim);
+    font-weight:400;
+    font-size:12px;
+    display:block;
+  }
+
+  .back-link{
+    color:var(--text-dim);
+    text-decoration:none;
+    font-size:13px;
+    border:1px solid var(--panel-edge);
+    border-radius:4px;
+    padding:6px 12px;
+  }
+
+  #drawCanvas{
+    display:block;
+    width:100vw;
+    height:100vh;
+    touch-action:none;
+    cursor:crosshair;
+  }
+
+  .bottombar{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:16px;
+    padding-bottom:max(16px, env(safe-area-inset-bottom));
+    background:linear-gradient(0deg, rgba(10,6,18,0.9), transparent);
+  }
+
+  .swatch{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:2px solid transparent;
+    cursor:pointer;
+  }
+
+  .swatch.active{
+    border-color:var(--text);
+    box-shadow:0 0 10px currentColor;
+  }
+
+  .size-btn{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:1px solid var(--panel-edge);
+    background:transparent;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .size-btn .dot{
+    border-radius:50%;
+    background:var(--text);
+  }
+
+  .size-btn.active{
+    background:rgba(46,232,255,0.15);
+  }
+
+  .tool-btn{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:1px solid var(--panel-edge);
+    background:transparent;
+    color:var(--text);
+    font-size:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .tool-btn.active{
+    background:rgba(255,46,196,0.2);
+    border-color:var(--warm);
+  }
+
+  #clearBtn{
+    border-color:var(--warm);
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="title">🎨 shared drawing wall<span>everyone who's here sees this live</span></div>
+    <a href="index.html" class="back-link">← back to now playing</a>
+  </div>
+
+  <canvas id="drawCanvas"></canvas>
+
+  <div class="bottombar">
+    <span class="swatch active" data-color="#2ee8ff" style="background:#2ee8ff;"></span>
+    <span class="swatch" data-color="#ff2ec4" style="background:#ff2ec4;"></span>
+    <span class="swatch" data-color="#f2eefc" style="background:#f2eefc;"></span>
+    <span class="swatch" data-color="#5a8fff" style="background:#5a8fff;"></span>
+    <span class="swatch" data-color="#f5c542" style="background:#f5c542;"></span>
+    <button class="tool-btn" id="eraserBtn" title="Eraser">🧹</button>
+    <button class="size-btn active" data-size="3"><span class="dot" style="width:5px;height:5px;"></span></button>
+    <button class="size-btn" data-size="7"><span class="dot" style="width:9px;height:9px;"></span></button>
+    <button class="size-btn" data-size="14"><span class="dot" style="width:14px;height:14px;"></span></button>
+    <button class="tool-btn" id="clearBtn" title="Clear for everyone">🗑</button>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://zfdatkpwjsyuhsvtgpwr.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZGF0a3B3anN5dWhzdnRncHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTMyMTMsImV4cCI6MjEwNDcyOTIxM30.5C3DVIEU5tyOK9RiX5CQVG7EQ3ntYumZ4V7MQn6Zx84';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  let currentColor = '#2ee8ff';
+  let currentSize = 3;
+  let drawing = false;
+  let currentStroke = [];
+  let lastSeenId = 0;
+  let allStrokes = [];
+
+  function resizeCanvas(){
+    const dpr = 2;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    redrawAll();
+  }
+
+  function redrawAll(){
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    allStrokes.forEach(s => renderStroke(s.points, s.color, s.size || 3));
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function getPos(e){
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: clientX / window.innerWidth,
+      y: clientY / window.innerHeight,
+    };
+  }
+
+  function renderStroke(points, color, size){
+    if (points.length < 2) return;
+    if (color === 'eraser'){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = color;
+    }
+    ctx.lineWidth = (size || 3) * (color === 'eraser' ? 4 : 1);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x * window.innerWidth, points[0].y * window.innerHeight);
+    for (let i = 1; i < points.length; i++){
+      ctx.lineTo(points[i].x * window.innerWidth, points[i].y * window.innerHeight);
+    }
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function startDraw(e){
+    drawing = true;
+    currentStroke = [getPos(e)];
+  }
+
+  function moveDraw(e){
+    if (!drawing) return;
+    const pos = getPos(e);
+    currentStroke.push(pos);
+    renderStroke(currentStroke.slice(-2), currentColor, currentSize);
+  }
+
+  async function endDraw(){
+    if (!drawing) return;
+    drawing = false;
+    if (currentStroke.length > 1){
+      allStrokes.push({ points: currentStroke, color: currentColor, size: currentSize });
+      try{
+        await sb.from('drawing_strokes').insert({ points: currentStroke, color: currentColor, size: currentSize });
+      } catch(e){ /* non-critical */ }
+    }
+    currentStroke = [];
+  }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDraw(e); }, { passive: false });
+  canvas.addEventListener('touchend', (e) => { e.preventDefault(); endDraw(); }, { passive: false });
+
+  document.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      document.getElementById('eraserBtn').classList.remove('active');
+      sw.classList.add('active');
+      currentColor = sw.dataset.color;
+    });
+  });
+
+  const eraserBtn = document.getElementById('eraserBtn');
+  eraserBtn.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    eraserBtn.classList.add('active');
+    currentColor = 'eraser';
+  });
+
+  let lastClearId = 0;
+
+  document.getElementById('clearBtn').addEventListener('click', async () => {
+    allStrokes = [];
+    redrawAll();
+    try{
+      const { data } = await sb.from('draw_clears').insert({}).select('id').single();
+      if (data && data.id) lastClearId = data.id;
+    } catch(e){ /* non-critical */ }
+  });
+
+  async function checkForClear(){
+    try{
+      const { data } = await sb
+        .from('draw_clears')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+      if (data && data.length && data[0].id > lastClearId){
+        lastClearId = data[0].id;
+        allStrokes = [];
+        lastSeenId = 0;
+        redrawAll();
+      }
+    } catch(e){ /* non-critical */ }
+  }
+
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSize = parseInt(btn.dataset.size, 10);
+    });
+  });
+
+  async function pollStrokes(){
+    try{
+      const { data, error } = await sb
+        .from('drawing_strokes')
+        .select('id, points, color, size')
+        .gt('id', lastSeenId)
+        .order('id', { ascending: true })
+        .limit(200);
+
+      if (error || !data || data.length === 0) return;
+
+      data.forEach(row => {
+        allStrokes.push({ points: row.points, color: row.color, size: row.size || 3 });
+        renderStroke(row.points, row.color, row.size || 3);
+        if (row.id > lastSeenId) lastSeenId = row.id;
+      });
+    } catch(e){ /* non-critical */ }
+  }
+
+  (async () => {
+    try{
+      let clearCutoff = null;
+      const { data: clearData } = await sb
+        .from('draw_clears')
+        .select('id, created_at')
+        .order('id', { ascending: false })
+        .limit(1);
+      if (clearData && clearData.length){
+        lastClearId = clearData[0].id;
+        clearCutoff = clearData[0].created_at;
+      }
+
+      let query = sb
+        .from('drawing_strokes')
+        .select('id, points, color, size, created_at')
+        .order('id', { ascending: true })
+        .limit(500);
+      if (clearCutoff) query = query.gt('created_at', clearCutoff);
+
+      const { data } = await query;
+      if (data && data.length){
+        data.forEach(row => {
+          allStrokes.push({ points: row.points, color: row.color, size: row.size || 3 });
+          if (row.id > lastSeenId) lastSeenId = row.id;
+        });
+        redrawAll();
+      }
+    } catch(e){ /* non-critical */ }
+  })();
+
+  setInterval(pollStrokes, 2000);
+  setInterval(checkForClear, 2500);
+</script>
+
+</body>
+</html>
