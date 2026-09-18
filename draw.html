@@ -296,7 +296,9 @@
       if (data && data.length && data[0].id > lastClearId){
         lastClearId = data[0].id;
         allStrokes = [];
-        lastSeenId = 0;
+        // note: lastSeenId is intentionally NOT reset here — doing so was the bug.
+        // Keeping it as-is means the next poll only fetches strokes newer than
+        // what we've already seen, correctly excluding everything drawn before this clear.
         redrawAll();
       }
     } catch(e){ /* non-critical */ }
