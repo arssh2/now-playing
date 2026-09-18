@@ -1366,10 +1366,7 @@
     } catch(e){ /* non-critical */ }
   });
 
-  qEl.form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const song = qEl.song.value.trim();
-    const artist = qEl.artist.value.trim();
+  async function submitRequest(song, artist, requester){
     if (!song) return;
 
     playBlip(660, 0.1);
@@ -1381,7 +1378,7 @@
       const { error } = await sb.from('queue').insert({
         song: song,
         artist: artist || null,
-        requester: qEl.name.value.trim() || null,
+        requester: requester || null,
       });
       displayOk = !error;
     } catch(e){
@@ -1390,7 +1387,7 @@
 
     let spotifyStatus = null;
     try{
-      const q = new URLSearchParams({ action: 'queue', song, artist });
+      const q = new URLSearchParams({ action: 'queue', song, artist: artist || '' });
       const res = await fetch(`${WORKER_URL}?${q.toString()}`);
       const data = await res.json();
       if (data.success){
@@ -1418,13 +1415,19 @@
       qEl.status.textContent = 'could not add — try again';
     }
 
-    if (displayOk){
-      qEl.form.reset();
-      loadQueue();
-    }
+    if (displayOk) loadQueue();
 
     qEl.submit.disabled = false;
     setTimeout(() => { qEl.status.textContent = ''; }, 4000);
+  }
+
+  qEl.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const song = qEl.song.value.trim();
+    const artist = qEl.artist.value.trim();
+    const requester = qEl.name.value.trim();
+    await submitRequest(song, artist, requester);
+    qEl.form.reset();
   });
 
   loadQueue();
@@ -1445,12 +1448,12 @@
     `).join('');
 
     container.querySelectorAll('.pick-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', async () => {
         const t = tracks[parseInt(card.dataset.i, 10)];
         if (!t) return;
-        qEl.song.value = t.name;
-        qEl.artist.value = t.artist || '';
-        qEl.song.focus();
+        card.style.opacity = '0.5';
+        await submitRequest(t.name, t.artist || '', qEl.name.value.trim());
+        card.style.opacity = '1';
       });
     });
   }
