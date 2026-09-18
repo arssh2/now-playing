@@ -525,6 +525,67 @@
 
   .clear-link:hover{ color:var(--text); }
 
+  .picks-row{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    scrollbar-width:thin;
+  }
+
+  .picks-row::-webkit-scrollbar{ height:4px; }
+  .picks-row::-webkit-scrollbar-thumb{ background:var(--panel-edge); border-radius:2px; }
+
+  .pick-card{
+    flex:0 0 auto;
+    width:84px;
+    cursor:pointer;
+    text-align:center;
+  }
+
+  .pick-art{
+    width:84px;
+    height:84px;
+    border-radius:8px;
+    background-color:#1c2225;
+    background-size:cover;
+    background-position:center;
+    border:1px solid var(--panel-edge);
+    margin-bottom:6px;
+    transition:transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .pick-card:hover .pick-art{
+    transform:scale(1.04);
+    border-color:rgb(var(--accent));
+  }
+
+  .pick-name{
+    font-size:11px;
+    color:var(--text);
+    line-height:1.3;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+
+  .pick-artist{
+    font-size:10px;
+    color:var(--text-dim);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top:2px;
+  }
+
+  .picks-empty{
+    font-size:12px;
+    color:var(--text-dim);
+    font-style:italic;
+  }
+
   .request-form{
     display:flex;
     flex-wrap:wrap;
@@ -730,7 +791,13 @@
     </div>
 
     <div class="queue-section">
-      <div class="queue-label">request a song</div>
+      <div class="queue-label">quick add — top tracks</div>
+      <div class="picks-row" id="topPicksRow"></div>
+
+      <div class="queue-label" style="margin-top:16px;">quick add — recently played</div>
+      <div class="picks-row" id="recentPicksRow"></div>
+
+      <div class="queue-label" style="margin-top:20px;">request a song</div>
       <form id="requestForm" class="request-form">
         <div class="song-input-wrap">
           <input type="text" id="reqSong" placeholder="song title" required maxlength="120" autocomplete="off" dir="auto">
@@ -1299,10 +1366,7 @@
     } catch(e){ /* non-critical */ }
   });
 
-  qEl.form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const song = qEl.song.value.trim();
-    const artist = qEl.artist.value.trim();
+  async function submitRequest(song, artist, requester){
     if (!song) return;
 
     playBlip(660, 0.1);
@@ -1314,7 +1378,7 @@
       const { error } = await sb.from('queue').insert({
         song: song,
         artist: artist || null,
-        requester: qEl.name.value.trim() || null,
+        requester: requester || null,
       });
       displayOk = !error;
     } catch(e){
@@ -1323,7 +1387,7 @@
 
     let spotifyStatus = null;
     try{
-      const q = new URLSearchParams({ action: 'queue', song, artist });
+      const q = new URLSearchParams({ action: 'queue', song, artist: artist || '' });
       const res = await fetch(`${WORKER_URL}?${q.toString()}`);
       const data = await res.json();
       if (data.success){
@@ -1351,17 +1415,61 @@
       qEl.status.textContent = 'could not add — try again';
     }
 
-    if (displayOk){
-      qEl.form.reset();
-      loadQueue();
-    }
+    if (displayOk) loadQueue();
 
     qEl.submit.disabled = false;
     setTimeout(() => { qEl.status.textContent = ''; }, 4000);
+  }
+
+  qEl.form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const song = qEl.song.value.trim();
+    const artist = qEl.artist.value.trim();
+    const requester = qEl.name.value.trim();
+    await submitRequest(song, artist, requester);
+    qEl.form.reset();
   });
 
   loadQueue();
   setInterval(loadQueue, 1000);
+
+  // --- quick-add suggestion shelves (top tracks + recently played) ---
+  function renderPicks(container, tracks){
+    if (!tracks || tracks.length === 0){
+      container.innerHTML = '<div class="picks-empty">nothing to show</div>';
+      return;
+    }
+    container.innerHTML = tracks.map((t, i) => `
+      <div class="pick-card" data-i="${i}">
+        <div class="pick-art" style="${t.art ? `background-image:url('${t.art}')` : ''}"></div>
+        <div class="pick-name">${escapeHtml(t.name)}</div>
+        <div class="pick-artist">${escapeHtml(t.artist || '')}</div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.pick-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const t = tracks[parseInt(card.dataset.i, 10)];
+        if (!t) return;
+        card.style.opacity = '0.5';
+        await submitRequest(t.name, t.artist || '', qEl.name.value.trim());
+        card.style.opacity = '1';
+      });
+    });
+  }
+
+  async function loadSuggestions(){
+    try{
+      const res = await fetch(`${WORKER_URL}?action=suggestions`);
+      const data = await res.json();
+      renderPicks(document.getElementById('topPicksRow'), data.top);
+      renderPicks(document.getElementById('recentPicksRow'), data.recent);
+    } catch(e){
+      // leave shelves empty on failure, not critical
+    }
+  }
+
+  loadSuggestions();
 
   // --- tiny UI sound blips ---
   let audioCtx = null;
