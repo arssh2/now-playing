@@ -1183,7 +1183,10 @@
         const cur = el.lyrics.querySelector(`.lyric-line[data-i="${idx}"]`);
         if (cur){
           cur.classList.add('active');
-          cur.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          // scroll only the lyrics box itself — scrollIntoView can scroll the
+          // whole page, which was fighting the user's own scrolling
+          const target = cur.offsetTop - (el.lyrics.clientHeight / 2) + (cur.clientHeight / 2);
+          el.lyrics.scrollTo({ top: target, behavior: 'smooth' });
         }
       }
       activeLine = idx;
