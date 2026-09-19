@@ -1530,17 +1530,17 @@
 
         if (!map){
           map = L.map('carMap', { zoomControl: false, attributionControl: false })
-            .setView([data.lat, data.lng], 11);
+            .setView([data.lat, data.lng], 13);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           circle = L.circle([data.lat, data.lng], {
-            radius: 3000,
+            radius: 1200,
             color: '#ffb92e',
             fillColor: '#ffb92e',
             fillOpacity: 0.25,
             weight: 1,
           }).addTo(map);
         } else {
-          map.setView([data.lat, data.lng], 11);
+          map.setView([data.lat, data.lng], 13);
           circle.setLatLng([data.lat, data.lng]);
         }
       } catch(e){
