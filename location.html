@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>location sharing — owner control</title>
+<style>
+  :root{
+    --asphalt: #0a0c0d;
+    --panel: #14181a;
+    --panel-edge: #1f2528;
+    --text: #e8e8e6;
+    --text-dim: #7a8286;
+    --amber: #ffb92e;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+  *{ box-sizing:border-box; }
+  html, body{
+    margin:0;
+    min-height:100%;
+    background:var(--asphalt);
+    color:var(--text);
+    font-family:-apple-system, 'Segoe UI', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .card{
+    width:100%;
+    max-width:400px;
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:16px;
+    padding:28px;
+    text-align:center;
+  }
+  h1{ font-size:18px; margin:0 0 6px; }
+  .sub{ color:var(--text-dim); font-size:13px; margin:0 0 24px; }
+  .status-dot{
+    width:12px; height:12px; border-radius:50%;
+    display:inline-block; margin-right:8px;
+    background:var(--text-dim);
+  }
+  .status-dot.on{ background:var(--green); box-shadow:0 0 8px var(--green); }
+  .status-dot.paused{ background:var(--amber); }
+  .status-line{ font-size:14px; margin-bottom:24px; }
+  button{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:10px;
+  }
+  #startBtn{ background:var(--green); color:#0a0c0d; }
+  #pauseBtn{ background:var(--amber); color:#0a0c0d; }
+  #stopBtn{ background:transparent; color:var(--red); border:1px solid var(--red); }
+  .last-update{ font-size:12px; color:var(--text-dim); margin-top:16px; }
+  .note{ font-size:11px; color:var(--text-dim); margin-top:20px; line-height:1.5; }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>📍 location sharing</h1>
+    <p class="sub">owner control — not linked from the public page</p>
+
+    <div class="status-line">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">not sharing</span>
+    </div>
+
+    <button id="startBtn">start sharing</button>
+    <button id="pauseBtn" style="display:none;">pause</button>
+    <button id="stopBtn" style="display:none;">stop completely</button>
+
+    <div class="last-update" id="lastUpdate"></div>
+
+    <p class="note">Location is rounded to roughly 1km precision before it's ever sent or stored — the exact GPS point never leaves your phone. Keep this tab open on your phone while driving for it to keep updating.</p>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://zfdatkpwjsyuhsvtgpwr.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZGF0a3B3anN5dWhzdnRncHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTMyMTMsImV4cCI6MjEwNDcyOTIxM30.5C3DVIEU5tyOK9RiX5CQVG7EQ3ntYumZ4V7MQn6Zx84';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const lastUpdate = document.getElementById('lastUpdate');
+
+  let watchId = null;
+  let updateInterval = null;
+
+  function roundCoord(n){
+    // ~2 decimal places = roughly 1.1km precision
+    return Math.round(n * 100) / 100;
+  }
+
+  async function pushLocation(paused){
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = roundCoord(pos.coords.latitude);
+      const lng = roundCoord(pos.coords.longitude);
+      try{
+        await sb.from('car_location').upsert({
+          id: 1, lat, lng, paused, updated_at: new Date().toISOString(),
+        });
+        lastUpdate.textContent = 'last pushed: ' + new Date().toLocaleTimeString();
+      } catch(e){ /* ignore */ }
+    }, (err) => {
+      lastUpdate.textContent = 'location error: ' + err.message;
+    }, { enableHighAccuracy: false, timeout: 10000 });
+  }
+
+  startBtn.addEventListener('click', () => {
+    statusDot.className = 'status-dot on';
+    statusText.textContent = 'sharing (rounded, updates every ~5 min)';
+    startBtn.style.display = 'none';
+    pauseBtn.style.display = 'block';
+    stopBtn.style.display = 'block';
+    pauseBtn.textContent = 'pause';
+
+    pushLocation(false);
+    updateInterval = setInterval(() => pushLocation(false), 5 * 60 * 1000);
+  });
+
+  let isPaused = false;
+  pauseBtn.addEventListener('click', async () => {
+    isPaused = !isPaused;
+    if (isPaused){
+      clearInterval(updateInterval);
+      statusDot.className = 'status-dot paused';
+      statusText.textContent = 'paused';
+      pauseBtn.textContent = 'resume';
+      try{ await sb.from('car_location').update({ paused: true }).eq('id', 1); } catch(e){}
+    } else {
+      statusDot.className = 'status-dot on';
+      statusText.textContent = 'sharing (rounded, updates every ~5 min)';
+      pauseBtn.textContent = 'pause';
+      pushLocation(false);
+      updateInterval = setInterval(() => pushLocation(false), 5 * 60 * 1000);
+    }
+  });
+
+  stopBtn.addEventListener('click', async () => {
+    clearInterval(updateInterval);
+    statusDot.className = 'status-dot';
+    statusText.textContent = 'not sharing';
+    startBtn.style.display = 'block';
+    pauseBtn.style.display = 'none';
+    stopBtn.style.display = 'none';
+    isPaused = false;
+    try{ await sb.from('car_location').update({ paused: true }).eq('id', 1); } catch(e){}
+  });
+</script>
+
+</body>
+</html>
