@@ -835,9 +835,9 @@
       </div>
     </div>
 
-    <div class="queue-section">
+    <div class="queue-section" id="locationSection" style="display:none;">
       <div class="queue-label">last seen</div>
-      <div id="locationStatus" class="location-status">loading…</div>
+      <div id="locationStatus" class="location-status"></div>
       <div id="carMap" class="car-map"></div>
     </div>
 
@@ -1516,20 +1516,31 @@
           .eq('id', 1)
           .single();
 
+        const sectionEl = document.getElementById('locationSection');
         const statusEl = document.getElementById('locationStatus');
 
-        if (error || !data || data.lat == null){
-          statusEl.textContent = 'no location shared yet';
+        if (error || !data || data.lat == null || data.paused){
+          sectionEl.style.display = 'none';
           return;
         }
 
+        sectionEl.style.display = '';
+
         const ago = timeAgo(data.updated_at);
-        statusEl.textContent = data.paused
-          ? `sharing paused — last seen ${ago}`
-          : `roughly here — updated ${ago}`;
+        statusEl.textContent = `roughly here — updated ${ago}`;
 
         if (!map){
-          map = L.map('carMap', { zoomControl: false, attributionControl: false })
+          map = L.map('carMap', {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            touchZoom: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            tap: false,
+          })
             .setView([data.lat, data.lng], 13);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           circle = L.circle([data.lat, data.lng], {
