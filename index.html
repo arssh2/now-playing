@@ -586,6 +586,22 @@
     font-style:italic;
   }
 
+  .location-status{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-bottom:10px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  .car-map{
+    width:100%;
+    height:160px;
+    border-radius:8px;
+    border:1px solid var(--panel-edge);
+    overflow:hidden;
+    filter:grayscale(0.3) brightness(0.8);
+  }
+
   .request-form{
     display:flex;
     flex-wrap:wrap;
@@ -728,6 +744,7 @@
     white-space:nowrap;
   }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
 
@@ -818,10 +835,17 @@
       </div>
     </div>
 
+    <div class="queue-section">
+      <div class="queue-label">last seen</div>
+      <div id="locationStatus" class="location-status">loading…</div>
+      <div id="carMap" class="car-map"></div>
+    </div>
+
     <a href="draw.html" target="_blank" class="draw-link">🎨 open the shared drawing wall →</a>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   const SUPABASE_URL = 'https://zfdatkpwjsyuhsvtgpwr.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZGF0a3B3anN5dWhzdnRncHdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTMyMTMsImV4cCI6MjEwNDcyOTIxM30.5C3DVIEU5tyOK9RiX5CQVG7EQ3ntYumZ4V7MQn6Zx84';
@@ -1470,6 +1494,64 @@
   }
 
   loadSuggestions();
+
+  // --- last seen location (rounded, owner-controlled) ---
+  (function initCarMap(){
+    let map = null;
+    let circle = null;
+
+    function timeAgo(dateStr){
+      const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    async function loadLocation(){
+      try{
+        const { data, error } = await sb
+          .from('car_location')
+          .select('lat, lng, paused, updated_at')
+          .eq('id', 1)
+          .single();
+
+        const statusEl = document.getElementById('locationStatus');
+
+        if (error || !data || data.lat == null){
+          statusEl.textContent = 'no location shared yet';
+          return;
+        }
+
+        const ago = timeAgo(data.updated_at);
+        statusEl.textContent = data.paused
+          ? `sharing paused — last seen ${ago}`
+          : `roughly here — updated ${ago}`;
+
+        if (!map){
+          map = L.map('carMap', { zoomControl: false, attributionControl: false })
+            .setView([data.lat, data.lng], 11);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+          circle = L.circle([data.lat, data.lng], {
+            radius: 3000,
+            color: '#ffb92e',
+            fillColor: '#ffb92e',
+            fillOpacity: 0.25,
+            weight: 1,
+          }).addTo(map);
+        } else {
+          map.setView([data.lat, data.lng], 11);
+          circle.setLatLng([data.lat, data.lng]);
+        }
+      } catch(e){
+        // leave last known state showing
+      }
+    }
+
+    loadLocation();
+    setInterval(loadLocation, 60000);
+  })();
+
 
   // --- tiny UI sound blips ---
   let audioCtx = null;
