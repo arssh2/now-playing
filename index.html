@@ -345,7 +345,7 @@ window.DESIGN = {
   glyphs: '追加を峠標高急注意ッ再生中次の曲ランクル首都高湾岸線カラオケーメン深夜営業駐車場つめたあっか〜いブスト油温水オディ落書き自販機ヘッドユニットグローブボックス窓出口大黒横浜東京方面0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ·:.-',
   build(k) {
     const { THREE, scene, std, canvasTex, shadowy, register, fitFont, wrap, reduce, phone, nowPlaying, queue, state, fmt, gsap } = k;
-    const Q = phone ? 1 : 2, QH = phone ? 1 : 1.5;
+    const Q = phone ? 1.5 : 2, QH = phone ? 1.25 : 1.5;
     const RATE = phone ? { hu: 1 / 10, cl: 1 / 4, pod: 1 / 3 } : { hu: 1 / 30, cl: 1 / 12, pod: 1 / 10 };
     const JP = '"Dela Gothic One", sans-serif', VFD = '"DotGothic16", monospace', BODY = '"Zen Kaku Gothic New", sans-serif';
     const np = o => { o.traverse(x => x.userData.noPick = true); return o; };
@@ -612,7 +612,7 @@ window.DESIGN = {
 
     // driver cluster + deep-dish wheel
     np(rb(.58, .09, .22, .035, dashMat, -.45, 1.11, -1.12));
-    const cl = canvasTex(1024, 380, phone ? .6 : QH);
+    const cl = canvasTex(1024, 380, QH);
     const clMesh = np(new THREE.Mesh(new THREE.PlaneGeometry(.52, .19), new THREE.MeshBasicMaterial({ map: cl.t, toneMapped: false })));
     clMesh.position.set(-.45, .99, -1.013); scene.add(clMesh);
     const wheel = np(new THREE.Group()); wheel.position.set(-.45, .96, -.84); wheel.rotation.x = -.38; scene.add(wheel);
@@ -657,7 +657,7 @@ window.DESIGN = {
     box(.4, .012, .005, carbon, 0, .965, .062, stack);
     [-.1, .1].forEach(vx => { box(.14, .05, .02, std(0x0b0b0c, .5), vx, .945, .065, stack); for (let i = 0; i < 3; i++) box(.13, .004, .01, metal, vx, .93 + i * .015, .075, stack); });
     box(.39, .235, .01, std(0x0c0c0f, .3, .4), 0, .795, .06, stack);
-    const hu = canvasTex(1024, 600, phone ? .6 : QH);
+    const hu = canvasTex(1024, 600, QH);
     const huMesh = new THREE.Mesh(new THREE.PlaneGeometry(.35, .2), new THREE.MeshBasicMaterial({ map: hu.t, toneMapped: false }));
     huMesh.position.set(0, .8, .066); stack.add(huMesh);
     [-.19, .19].forEach(kx => { const kn = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .02, 24), metal)); kn.rotation.x = Math.PI / 2; kn.position.set(kx * .92, .705, .07); stack.add(kn); });
@@ -1360,8 +1360,9 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   /* ---------- renderer ---------- */
   const canvas = document.getElementById('scene');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  const DPR_MAX = phone ? Math.min(devicePixelRatio || 1, 1.5) : Math.min(Math.max(devicePixelRatio || 1, D.hiRes ? 1.5 : 1), 2);
-  let dprNow = phone ? Math.min(DPR_MAX, 1.25) : DPR_MAX;
+  const DPR_MAX = phone ? Math.min(devicePixelRatio || 1, 2.5) : Math.min(Math.max(devicePixelRatio || 1, D.hiRes ? 1.5 : 1), 2);
+  let dprNow = phone ? Math.min(DPR_MAX, 2) : DPR_MAX;
+  const DPR_MIN = phone ? Math.min(DPR_MAX, 1.5) : .7;
   renderer.setPixelRatio(dprNow);
   const maxAniso = renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4;
   renderer.outputEncoding = THREE.sRGBEncoding;
@@ -1906,7 +1907,7 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     if (fN < 45) return;
     const avg = fAcc / fN; fAcc = 0; fN = 0;
     let next = dprNow;
-    if (avg > 38 && dprNow > .7) next = Math.max(.7, dprNow - .15);
+    if (avg > 38 && dprNow > DPR_MIN) next = Math.max(DPR_MIN, dprNow - .15);
     else if (avg < 26 && dprNow < DPR_MAX) next = Math.min(DPR_MAX, dprNow + .1);
     if (next !== dprNow) { dprNow = next; renderer.setPixelRatio(dprNow); renderer.setSize(innerWidth, innerHeight, false); if (composer) { composer.setPixelRatio(dprNow); composer.setSize(innerWidth, innerHeight); } }
   };
