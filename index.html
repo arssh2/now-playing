@@ -75,6 +75,63 @@
   a.classic-link:hover{color:var(--paper);}
   body.focused a.classic-link{opacity:0; pointer-events:none;}
   @media (max-width:760px){ a.classic-link{left:auto; right:16px; top:calc(100px + env(safe-area-inset-top,0px)); bottom:auto;} }
+  .search-list{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--ink-2); margin-top:-4px;}
+  .search-list[hidden]{display:none;}
+  .sr{display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:12px; padding:9px 12px; background:none; border:none; border-bottom:1px solid var(--line); color:var(--paper); text-align:left; font-family:inherit; cursor:pointer;}
+  .sr:last-child{border-bottom:none;}
+  .sr:hover,.sr:focus-visible{background:color-mix(in srgb,var(--a1) 12%,transparent); outline:none;}
+  .sr:disabled{opacity:.6;}
+  .sr-art{width:44px; height:44px; border-radius:6px; background:var(--ink) center/cover no-repeat;}
+  .sr-text{display:flex; flex-direction:column; min-width:0;}
+  .sr-name{font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sr-artist{font-size:13px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sr-add{font-family:var(--f-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); background:var(--a1); padding:6px 10px; border-radius:999px;}
+  .sr-empty{padding:12px 14px; color:var(--dim); font-size:13.5px;}
+  body.phone .chip, body.phone .tag3d, body.phone .panel, body.phone .sound-btn{-webkit-backdrop-filter:none; backdrop-filter:none;}
+  body.phone .panel{background:var(--ink);}
+  body.phone .chip, body.phone .sound-btn{background:var(--ink-2);}
+  body.phone .tag3d{background:color-mix(in srgb,var(--ink) 90%,transparent);}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
+  .hud-bottom .actions{display:flex; align-items:center; justify-content:center; gap:10px; pointer-events:auto; flex-wrap:wrap;}
+  .cta{font-family:var(--f-body); font-size:16px; font-weight:700; padding:14px 24px; border-radius:999px; border:none; background:var(--a1); color:var(--ink); cursor:pointer; box-shadow:0 8px 24px color-mix(in srgb,var(--a1) 35%,transparent);}
+  .cta:hover,.cta:focus-visible{filter:brightness(1.08); outline:2px solid var(--paper); outline-offset:2px;}
+  .np-bar{pointer-events:auto; display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:12px; width:min(420px,100%); padding:8px 14px 8px 8px; border-radius:14px; border:1px solid var(--line); background:color-mix(in srgb,var(--ink) 82%,transparent); color:var(--paper); text-align:left; cursor:pointer; font-family:inherit;}
+  .np-bar:focus-visible{outline:2px solid var(--a1); outline-offset:2px;}
+  .np-bar-art{width:44px; height:44px; border-radius:8px; background:var(--ink-2) center/cover no-repeat;}
+  .np-bar-text{display:flex; flex-direction:column; min-width:0;}
+  .np-bar-kicker{color:var(--a2); font-size:10px;}
+  .np-bar-title{font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .np-bar-artist{font-size:12.5px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .np-bar-eq{display:flex; align-items:flex-end; gap:3px; height:18px;}
+  .np-bar-eq i{width:4px; background:var(--a1); border-radius:2px; animation:eq 1s ease-in-out infinite;}
+  .np-bar-eq i:nth-child(2){animation-delay:-.4s;} .np-bar-eq i:nth-child(3){animation-delay:-.7s;}
+  .np-bar.paused .np-bar-eq i{animation:none; height:4px;}
+  @keyframes eq{0%,100%{height:4px;}50%{height:18px;}}
+  .welcome{position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55);}
+  .welcome[hidden]{display:none;}
+  .welcome-card{width:min(420px,100%); background:var(--ink); border:1px solid var(--line); border-radius:18px; padding:24px 22px; display:flex; flex-direction:column; gap:14px; box-shadow:0 30px 80px rgba(0,0,0,.6);}
+  .welcome-card h2{font-size:clamp(30px,8vw,40px); margin:0;}
+  .welcome-card p{margin:0; color:var(--dim); font-size:15px; line-height:1.5;}
+  .welcome-steps{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; counter-reset:w;}
+  .welcome-steps li{display:grid; grid-template-columns:28px 1fr; column-gap:10px; counter-increment:w;}
+  .welcome-steps li::before{content:counter(w); grid-row:span 2; width:28px; height:28px; border-radius:50%; background:var(--ink-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:12px; color:var(--a1);}
+  .welcome-steps b{font-size:15px;} .welcome-steps span{font-size:13.5px; color:var(--dim);}
+  .search-box{flex-direction:row; align-items:center; gap:10px; padding:0 14px; border:1px solid var(--line); border-radius:12px; background:var(--ink-2); color:var(--dim);}
+  .search-box:focus-within{border-color:var(--a1);}
+  .search-box input{border:none; background:none; padding:14px 0; font-size:16px;}
+  .search-box input:focus{outline:none;}
+  details.more{border:1px solid var(--line); border-radius:12px; padding:0 14px;}
+  details.more[open]{padding-bottom:14px; display:flex; flex-direction:column; gap:10px;}
+  details.more summary{cursor:pointer; padding:12px 0; color:var(--dim); font-size:13.5px;}
+  details.more summary:focus-visible{outline:2px solid var(--a1); outline-offset:2px; border-radius:6px;}
+  .sheet-grip{display:none;}
+  @media (max-width:760px){
+    .panel.tall{height:88%;}
+    .sheet-grip{display:block; width:44px; height:5px; border-radius:3px; background:var(--line); margin:-8px auto 0;}
+    .back{position:absolute; top:16px; right:16px;}
+    .hud-bottom .actions .chip{padding:10px 12px;}
+    .cta{padding:13px 20px;}
+  }
   .tag3d{position:fixed; top:0; left:0; z-index:6; display:flex; align-items:center; gap:8px; padding:9px 13px; border-radius:999px; border:1px solid color-mix(in srgb,var(--paper) 30%,transparent); background:color-mix(in srgb,var(--ink) 72%,transparent); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); color:var(--paper); font-family:var(--f-body); font-size:13px; font-weight:500; white-space:nowrap; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .35s;}
   .tag3d.on{opacity:1; pointer-events:auto;}
   .tag3d i{width:8px; height:8px; border-radius:50%; background:var(--a1); box-shadow:0 0 0 0 var(--a1); animation:ping 1.8s infinite;}
@@ -111,18 +168,37 @@
   <div class="live mono"><i></i>Engine on</div>
 </div>
 <div class="hud-bottom">
-  <div class="mono hint">Tap a label to start</div>
-  <div class="chips">
-    <button class="chip" data-go="player"><b style="background:var(--a1)"></b>Now playing <small>再生中</small></button>
-    <button class="chip" data-go="queue"><b style="background:var(--a2)"></b>Up next <small>次の曲</small></button>
-    <button class="chip" data-go="wall"><b style="background:var(--a3)"></b>Draw <small>落書き</small></button>
+  <div class="mono hint"></div>
+  <button class="np-bar" id="npBar" data-go="player" type="button">
+    <span class="np-bar-art" id="npBarArt"></span>
+    <span class="np-bar-text"><span class="np-bar-kicker mono" id="npBarState">Now playing</span><span class="np-bar-title" id="npBarTitle" dir="auto"></span><span class="np-bar-artist" id="npBarArtist" dir="auto"></span></span>
+    <span class="np-bar-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+  <div class="actions">
+    <button class="chip" data-go="player" type="button"><b style="background:var(--a2)"></b>Now playing <small>再生中</small></button>
+    <button class="cta" data-go="queue" data-focus="1" type="button"><span aria-hidden="true">＋</span> Add a song</button>
+    <button class="chip" data-go="wall" type="button"><b style="background:var(--a3)"></b>Draw <small>落書き</small></button>
+  </div>
+</div>
+<div class="welcome" id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="wTitle">
+  <div class="welcome-card">
+    <div class="mono kicker">Welcome</div>
+    <h2 class="display" id="wTitle">You found the car</h2>
+    <p>You scanned the QR on the back window. Whatever is playing in here is live, and you can pick what plays next.</p>
+    <ol class="welcome-steps">
+      <li><b>Add a song</b><span>Search, tap it, and it joins the line in the car.</span></li>
+      <li><b>See what's playing</b><span>Cover, lyrics and what's up next.</span></li>
+      <li><b>Draw</b><span>Leave a mark on the foggy windshield.</span></li>
+    </ol>
+    <div class="btn-row"><button class="btn primary" id="wAdd" type="button">＋ Add a song</button><button class="btn" id="wLook" type="button">Look around</button></div>
   </div>
 </div>
 <a class="classic-link" href="classic.html">Classic view →</a>
 <div class="tip" id="tip"></div>
 
 <aside class="panel" aria-live="polite">
-  <button class="back mono" id="back">← Back to the road</button>
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <button class="back mono" id="back" type="button">✕ Close</button>
   <section class="sec" data-sec="player">
     <div class="mono kicker"><span class="jp">再生中</span>Now playing</div>
     <h2 class="display">On the deck</h2>
@@ -136,17 +212,21 @@
   </section>
   <section class="sec" data-sec="queue">
     <div class="mono kicker"><span class="jp">次の曲</span>Up next</div>
-    <h2 class="display">Songs in line</h2>
-    <ol class="queue" id="queueList"></ol>
-    <div class="picks" id="picks" hidden><div class="mono kicker">Quick picks · tap to add</div><div class="picks-row"></div></div>
-    <div class="form-head"><b>Request a song</b><span>It goes to the end of the line and plays after these.</span></div>
+    <h2 class="display">Add a song</h2>
     <form id="reqForm" novalidate>
-      <label class="f"><span class="mono">Song</span><input type="text" id="fSong" dir="auto" autocomplete="off" placeholder="e.g. Blinding Lights"></label>
-      <label class="f"><span class="mono">Artist</span><input type="text" id="fArtist" dir="auto" autocomplete="off" placeholder="Optional"></label>
-      <label class="f"><span class="mono">Your name</span><input type="text" id="fName" dir="auto" autocomplete="off" placeholder="Optional"></label>
+      <label class="f search-box"><span class="sr-only">Search for a song</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" id="fSong" dir="auto" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Search a song or artist"></label>
+      <div class="search-list" id="searchList" hidden></div>
+      <details class="more">
+        <summary>Add your name or type it in yourself</summary>
+        <label class="f"><span class="mono">Your name (shows on the card)</span><input type="text" id="fName" dir="auto" autocomplete="off" placeholder="Optional"></label>
+        <label class="f"><span class="mono">Artist</span><input type="text" id="fArtist" dir="auto" autocomplete="off" placeholder="Optional"></label>
+        <button class="btn primary" type="submit">Add it to the line</button>
+      </details>
       <div class="err mono" id="fErr"></div>
-      <button class="btn primary" type="submit">Add to the line</button>
     </form>
+    <div class="picks" id="picks" hidden><div class="mono kicker">Quick picks · tap to add</div><div class="picks-row"></div></div>
+    <div class="form-head"><b>In line now</b><span>These play next in the car, top to bottom.</span></div>
+    <ol class="queue" id="queueList"></ol>
   </section>
   <section class="sec" data-sec="wall">
     <div class="mono kicker"><span class="jp">落書き</span>Draw</div>
@@ -181,7 +261,7 @@ window.DESIGN = {
   build(k) {
     const { THREE, scene, std, canvasTex, shadowy, register, fitFont, wrap, reduce, phone, nowPlaying, queue, state, fmt, gsap } = k;
     const Q = phone ? 1 : 2, QH = phone ? 1 : 1.5;
-    const RATE = phone ? { hu: 1 / 15, cl: 1 / 6, pod: 1 / 5 } : { hu: 1 / 30, cl: 1 / 12, pod: 1 / 10 };
+    const RATE = phone ? { hu: 1 / 10, cl: 1 / 4, pod: 1 / 3 } : { hu: 1 / 30, cl: 1 / 12, pod: 1 / 10 };
     const JP = '"Dela Gothic One", sans-serif', VFD = '"DotGothic16", monospace', BODY = '"Zen Kaku Gothic New", sans-serif';
     const np = o => { o.traverse(x => x.userData.noPick = true); return o; };
     const box = (w, h, d, mat, x, y, z, parent = scene) => { const m = shadowy(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat)); m.position.set(x, y, z); parent.add(m); return m; };
@@ -203,7 +283,7 @@ window.DESIGN = {
     const grain = canvasTex(256, 256);
     for (let i = 0; i < 256 * 64; i++) { const v = 90 + Math.random() * 90 | 0; grain.x.fillStyle = `rgb(${v},${v},${v})`; grain.x.fillRect(Math.random() * 256, Math.random() * 256, 2, 2); }
     grain.t.wrapS = grain.t.wrapT = THREE.RepeatWrapping; grain.t.repeat.set(6, 6); grain.t.encoding = THREE.LinearEncoding; grain.t.needsUpdate = true;
-    [suede, dashMat, soft, redFab, headliner].forEach(m => { m.bumpMap = grain.t; m.bumpScale = .0012; });
+    if (!phone) [suede, dashMat, soft, redFab, headliner].forEach(m => { m.bumpMap = grain.t; m.bumpScale = .0012; });
 
     /* ================= outside: an endless mountain loop ================= */
     // Everything outside lives in `world`, which is moved around the car each frame so the car drives the loop.
@@ -244,7 +324,7 @@ window.DESIGN = {
       ctrl.push(new THREE.Vector3(r * Math.cos(th), 5 * Math.sin(2 * th) + 2.5 * Math.sin(5 * th + 1), r * Math.sin(th)));
     }
     const curve = new THREE.CatmullRomCurve3(ctrl, true, 'catmullrom', .5);
-    const N = phone ? 1100 : 1600, W = 3.3, LEN = curve.getLength();
+    const N = phone ? 800 : 1600, W = 3.3, LEN = curve.getLength();
     const P = curve.getSpacedPoints(N);
     const T = P.map((_, i) => curve.getTangentAt((i / N) % 1));
     const R = T.map(t => new THREE.Vector3(-t.z, 0, t.x).normalize());
@@ -284,7 +364,7 @@ window.DESIGN = {
     const reflPole = new THREE.InstancedMesh(new THREE.BoxGeometry(.04, .8, .04), std(0xe9ecef, .5), Math.ceil(N / 12) + 1); let rc = 0;
     for (let i = 6; i <= N; i += 12) { const p = P[i].clone().addScaledVector(R[i], W + .5); m4.makeTranslation(p.x, p.y + .4, p.z); reflPole.setMatrixAt(rc, m4); m4.makeTranslation(p.x, p.y + .74, p.z); refl.setMatrixAt(rc, m4); rc++; }
     refl.count = reflPole.count = rc; np(refl); np(reflPole); world.add(refl, reflPole);
-    const TREES = phone ? 500 : 1200;
+    const TREES = phone ? 350 : 1200;
     const cones = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), std(0x0c1a12, .95), TREES);
     const trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(.12, .16, 1, 6), std(0x1a120c, 1), TREES);
     const q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
@@ -296,7 +376,7 @@ window.DESIGN = {
       ps.set(base.x, base.y + 1 + h / 2, base.z); sc.set(rad, h, rad); m4.compose(ps, q, sc); cones.setMatrixAt(n, m4);
       ps.set(base.x, base.y + .6, base.z); sc.set(1, 1.3, 1); m4.compose(ps, q, sc); trunks.setMatrixAt(n, m4);
     }
-    np(cones); np(trunks); world.add(cones, trunks);
+    np(cones); np(trunks); world.add(cones); if (!phone) world.add(trunks);
     const signAt = (i, side, draw, w, h, y, diamond) => {
       const p = P[i].clone().addScaledVector(R[i], side), t = T[i];
       const g = np(new THREE.Group()); g.position.copy(p); g.rotation.y = Math.atan2(-t.x, -t.z); world.add(g);
@@ -349,7 +429,7 @@ window.DESIGN = {
       const p = curve.getPointAt(u), t = curve.getTangentAt(u), r = new THREE.Vector3(-t.z, 0, t.x).normalize();
       m.position.copy(p).addScaledVector(r, -5 + Math.random() * 10); m.position.y += .5 + Math.random() * 1.4;
     };
-    for (let i = 0; i < (phone ? 6 : 12); i++) {
+    for (let i = 0; i < (phone ? 3 : 12); i++) {
       const m = np(new THREE.Mesh(new THREE.PlaneGeometry(7 + Math.random() * 5, 2 + Math.random() * 1.5), new THREE.MeshBasicMaterial({ map: mistTex.t, transparent: true, depthWrite: false, opacity: .1 + Math.random() * .08, blending: THREE.AdditiveBlending })));
       placeMist(m, 8 + Math.random() * 140); world.add(m); mists.push(m);
     }
@@ -378,7 +458,7 @@ window.DESIGN = {
     const wsCenter = new THREE.Vector3(0, 1.34, -1.25);
     const up = new THREE.Vector3(0, Math.cos(RAKE), Math.sin(RAKE)), nrm = new THREE.Vector3(0, -Math.sin(RAKE), Math.cos(RAKE));
     const glass = np(new THREE.Mesh(new THREE.PlaneGeometry(2.0, .91), new THREE.MeshBasicMaterial({ color: 0x5a6a9a, transparent: true, opacity: .07, depthWrite: false, side: THREE.DoubleSide })));
-    glass.position.copy(wsCenter); glass.rotation.x = RAKE; scene.add(glass);
+    glass.position.copy(wsCenter); glass.rotation.x = RAKE; if (!phone) scene.add(glass);
     // windshield banner
     const ban = canvasTex(2048, 96, Q);
     ban.x.fillStyle = 'rgba(8,8,12,.92)'; ban.x.fillRect(0, 0, 2048, 96);
@@ -430,7 +510,7 @@ window.DESIGN = {
     const strip = np(new THREE.Mesh(new THREE.BoxGeometry(2.0, .01, .01), new THREE.MeshBasicMaterial({ color: 0xff2a6d, toneMapped: false })));
     strip.position.set(0, .56, -1.04); scene.add(strip);
     const foot = new THREE.PointLight(0xff2a6d, .7, 1.7); foot.position.set(0, .45, -.8); scene.add(foot);
-    const cyanFill = new THREE.PointLight(0x35e0ff, .35, 1.6); cyanFill.position.set(0, 1.2, -.3); scene.add(cyanFill);
+    const cyanFill = new THREE.PointLight(0x35e0ff, .35, 1.6); cyanFill.position.set(0, 1.2, -.3); if (!phone) scene.add(cyanFill);
 
     // lucky cat on the dash
     const cat = np(new THREE.Group()); cat.position.set(.9, 1.081, -1.34); cat.rotation.y = -.35; scene.add(cat);
@@ -447,7 +527,7 @@ window.DESIGN = {
 
     // driver cluster + deep-dish wheel
     np(rb(.58, .09, .22, .035, dashMat, -.45, 1.11, -1.12));
-    const cl = canvasTex(1024, 380, QH);
+    const cl = canvasTex(1024, 380, phone ? .6 : QH);
     const clMesh = np(new THREE.Mesh(new THREE.PlaneGeometry(.52, .19), new THREE.MeshBasicMaterial({ map: cl.t, toneMapped: false })));
     clMesh.position.set(-.45, .99, -1.013); scene.add(clMesh);
     const wheel = np(new THREE.Group()); wheel.position.set(-.45, .96, -.84); wheel.rotation.x = -.38; scene.add(wheel);
@@ -492,7 +572,7 @@ window.DESIGN = {
     box(.4, .012, .005, carbon, 0, .965, .062, stack);
     [-.1, .1].forEach(vx => { box(.14, .05, .02, std(0x0b0b0c, .5), vx, .945, .065, stack); for (let i = 0; i < 3; i++) box(.13, .004, .01, metal, vx, .93 + i * .015, .075, stack); });
     box(.39, .235, .01, std(0x0c0c0f, .3, .4), 0, .795, .06, stack);
-    const hu = canvasTex(1024, 600, QH);
+    const hu = canvasTex(1024, 600, phone ? .6 : QH);
     const huMesh = new THREE.Mesh(new THREE.PlaneGeometry(.35, .2), new THREE.MeshBasicMaterial({ map: hu.t, toneMapped: false }));
     huMesh.position.set(0, .8, .066); stack.add(huMesh);
     [-.19, .19].forEach(kx => { const kn = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .02, 24), metal)); kn.rotation.x = Math.PI / 2; kn.position.set(kx * .92, .705, .07); stack.add(kn); });
@@ -712,7 +792,7 @@ window.DESIGN = {
     [.015, .785].forEach(ex => box(.012, .06, .12, carbon, ex, .03, 0, rack));
     const rackGlow = np(new THREE.Mesh(new THREE.BoxGeometry(.72, .004, .004), new THREE.MeshBasicMaterial({ color: 0xff2a6d, toneMapped: false })));
     rackGlow.position.set(.4, .002, .062); rack.add(rackGlow);
-    const rackLight = new THREE.PointLight(0xfff0e0, .5, .9); rackLight.position.set(.4, 1.3, -1.02); scene.add(rackLight);
+    const rackLight = new THREE.PointLight(0xfff0e0, .5, .9); rackLight.position.set(.4, 1.3, -1.02); if (!phone) scene.add(rackLight);
 
     const SHOW = 4, CARD = .13, GAP = .145;
     const titleFont = size => `${size}px ${JP}`;
@@ -846,10 +926,10 @@ window.DESIGN = {
       refl2.t.needsUpdate = true;
     }
     const reflMesh = np(new THREE.Mesh(new THREE.PlaneGeometry(2.0, .91), new THREE.MeshBasicMaterial({ map: refl2.t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })));
-    reflMesh.position.copy(wsCenter.clone().add(nrm.clone().multiplyScalar(.0105))); reflMesh.rotation.x = RAKE; scene.add(reflMesh);
+    reflMesh.position.copy(wsCenter.clone().add(nrm.clone().multiplyScalar(.0105))); reflMesh.rotation.x = RAKE; if (!phone) scene.add(reflMesh);
 
     /* ---------- rain falling outside ---------- */
-    const RAIN = phone ? 600 : 1600;
+    const RAIN = phone ? 350 : 1600;
     const rp = new Float32Array(RAIN * 6), rv = new Float32Array(RAIN);
     const resetDrop = (i, top) => {
       const x = -7 + Math.random() * 16, z = -1.9 - Math.random() * 22, y = top ? 5 + Math.random() * 2 : -2.5 + Math.random() * 9, o = i * 6;
@@ -869,12 +949,12 @@ window.DESIGN = {
     };
 
     /* ---------- raindrops on the outside of the windshield + wipers ---------- */
-    const wet = canvasTex(1024, 470, phone ? 1 : 1.5);
+    const wet = canvasTex(1024, 470, phone ? .5 : 1.5);
     const wetMesh = np(new THREE.Mesh(new THREE.PlaneGeometry(2.0, .91), new THREE.MeshBasicMaterial({ map: wet.t, transparent: true, depthWrite: false, color: 0xdde6f2 })));
     wetMesh.position.copy(wsCenter.clone().add(nrm.clone().multiplyScalar(-.006))); wetMesh.rotation.x = RAKE; scene.add(wetMesh);
     const runners = [];
     const stepWet = dt => {
-      const c = wet.x, n = Math.max(1, Math.round(dt * (phone ? 55 : 100)));
+      const c = wet.x, n = Math.max(1, Math.round(dt * (phone ? 35 : 100)));
       for (let i = 0; i < n; i++) {
         const x = Math.random() * 1024, y = Math.random() * 440, r = .8 + Math.random() * Math.random() * 5;
         bead(c, x, y, r, .55);
@@ -1017,10 +1097,11 @@ window.DESIGN = {
 
     /* ---------- lights ---------- */
     scene.add(new THREE.HemisphereLight(0x5a4a9a, 0x0a0608, .35));
-    const cabin = new THREE.PointLight(0xffd8c0, .28, 3); cabin.position.set(0, 1.6, .2); scene.add(cabin);
+    const cabin = new THREE.PointLight(0xffd8c0, .28, 3); cabin.position.set(0, 1.6, .2); if (!phone) scene.add(cabin);
 
     try {
       const pm = new THREE.PMREMGenerator(k.renderer);
+      if (phone) throw 0;
       scene.environment = pm.fromEquirectangular(bd.t).texture;
       scene.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(m => { if (m.isMeshStandardMaterial) m.envMapIntensity = .35; }); });
     } catch (e) {}
@@ -1049,7 +1130,7 @@ window.DESIGN = {
         lastT = t;
         if (!reduce) { drive.s += drive.speed * dt; placeWorld(); stepMist(); wheel.rotation.z = drive.steer; }
         if (!reduce) { stepRain(dt); stepCar(dt); }
-        wetAcc += dt; if (wetAcc > (phone ? .12 : .07)) { stepWet(wetAcc); wetAcc = 0; }
+        wetAcc += dt; if (wetAcc > (phone ? .2 : .07)) { stepWet(wetAcc); wetAcc = 0; }
         wipeIn -= dt; if (wipeIn <= 0) { wipe(); wipeIn = 10 + Math.random() * 5; }
         acc += dt; if (acc > RATE.hu) { drawHU(t, acc); acc = 0; }
         accCl += dt; if (accCl > RATE.cl) { drawCluster(t); accCl = 0; }
@@ -1133,7 +1214,9 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   /* ---------- renderer ---------- */
   const canvas = document.getElementById('scene');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(phone ? Math.min(devicePixelRatio || 1, 1.5) : Math.min(Math.max(devicePixelRatio || 1, D.hiRes ? 1.5 : 1), 2));
+  const DPR_MAX = phone ? Math.min(devicePixelRatio || 1, 1.5) : Math.min(Math.max(devicePixelRatio || 1, D.hiRes ? 1.5 : 1), 2);
+  let dprNow = phone ? Math.min(DPR_MAX, 1.25) : DPR_MAX;
+  renderer.setPixelRatio(dprNow);
   const maxAniso = renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1202,7 +1285,7 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     box.textContent = 'The 3D scene failed to load: ' + (err && err.message ? err.message : err);
     document.body.appendChild(box);
   };
-  if (D.film) {
+  if (D.film && !phone) {
     const v = document.createElement('div'); v.className = 'vignette'; document.body.appendChild(v);
     const gc = document.createElement('canvas'); gc.width = gc.height = 160; const gx = gc.getContext('2d'); const im = gx.createImageData(160, 160);
     for (let i = 0; i < im.data.length; i += 4) { const n = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = n; im.data[i + 3] = 255; }
@@ -1303,8 +1386,10 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   });
 
   /* ---------- panel ---------- */
-  const open = k => {
+  const open = (k, focusSearch) => {
     setHover(null); tip.classList.remove('on');
+    document.querySelector('.panel').classList.toggle('tall', k === 'queue');
+    if (k === 'queue' && focusSearch) setTimeout(() => { const f = document.getElementById('fSong'); if (f) f.focus(); }, 480);
     document.querySelectorAll('.sec').forEach(s => s.classList.toggle('on', s.dataset.sec === k));
     document.body.classList.add('focused');
     flyTo(k);
@@ -1314,17 +1399,30 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   const close = () => { document.body.classList.remove('focused'); flyTo('overview'); if (api.onBlur) api.onBlur(); };
   document.getElementById('back').addEventListener('click', close);
   addEventListener('keydown', e => { if (e.key === 'Escape' && current !== 'overview') close(); });
-  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => open(b.dataset.go)));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => open(b.dataset.go, b.dataset.focus === '1')));
+  const wel = document.getElementById('welcome');
+  if (wel) {
+    let seen = false; try { seen = sessionStorage.getItem('np_welcome') === '1'; } catch (e) {}
+    const done = () => { wel.hidden = true; try { sessionStorage.setItem('np_welcome', '1'); } catch (e) {} };
+    if (!seen) wel.hidden = false;
+    document.getElementById('wAdd').addEventListener('click', () => { done(); open('queue', true); });
+    document.getElementById('wLook').addEventListener('click', done);
+    wel.addEventListener('click', e => { if (e.target === wel) done(); });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && !wel.hidden) done(); });
+  }
 
   /* ---------- now playing ---------- */
   const syncNowPlaying = () => {
     document.querySelectorAll('.np-title-live').forEach(el => el.textContent = nowPlaying.song);
     document.querySelectorAll('.np-artist-live').forEach(el => el.textContent = nowPlaying.artist);
     document.querySelectorAll('.t-dur').forEach(el => el.textContent = fmt(nowPlaying.dur));
+    const bt = document.getElementById('npBarTitle'), ba = document.getElementById('npBarArtist'), bart = document.getElementById('npBarArt');
+    if (bt) { bt.textContent = nowPlaying.song; ba.textContent = nowPlaying.artist; const th2 = api.thumb ? api.thumb(nowPlaying) : ''; bart.style.backgroundImage = th2 ? `url(${th2})` : ''; bart.style.backgroundColor = nowPlaying.color; }
     const art = document.getElementById('npArt');
     if (art) { const th = api.thumb ? api.thumb(nowPlaying) : ''; art.style.backgroundImage = th ? `url(${th})` : ''; art.style.backgroundColor = nowPlaying.color; }
   };
   const tickClock = () => {
+    const bar = document.getElementById('npBar'); if (bar) { bar.classList.toggle('paused', state.paused); const st = document.getElementById('npBarState'); if (st) st.textContent = state.paused ? 'Paused' : 'Now playing'; }
     document.querySelectorAll('.t-now').forEach(el => el.textContent = fmt(nowPlaying.pos));
     document.querySelectorAll('.prog-live').forEach(el => el.style.width = (nowPlaying.pos / nowPlaying.dur * 100) + '%');
   };
@@ -1364,6 +1462,13 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   };
   renderQueue();
   ui.refresh = () => { renderQueue(); syncNowPlaying(); };
+  // Enter in the search box: add the top search result, or send what was typed
+  document.getElementById('fSong').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (LIVE && live.enterPick && live.enterPick()) return;
+    document.getElementById('reqForm').dispatchEvent(new Event('submit', { cancelable: true }));
+  });
   document.getElementById('reqForm').addEventListener('submit', e => {
     e.preventDefault();
     const song = document.getElementById('fSong').value.trim();
@@ -1372,7 +1477,7 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     const err = document.getElementById('fErr');
     if (!song) { err.textContent = 'Type a song name first.'; return; }
     err.textContent = '';
-    if (LIVE) { live.request(song, artist, by); e.target.reset(); return; }
+    if (LIVE) { live.request(song, artist, by); e.target.reset(); if (live.hideSearch) live.hideSearch(); return; }
     const item = { song, artist, by, color: nextColor() };
     queue.push(item);
     api.addItem(item, queue.length - 1);
@@ -1487,12 +1592,12 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     };
 
     // requests, skip
-    live.request = async (song, artist, by) => {
+    live.request = async (song, artist, by, uri) => {
       say('Adding “' + song + '”…');
       let saved = false;
       if (sbc) { try { const { error } = await sbc.from('queue').insert({ song, artist: artist || null, requester: by || null }); saved = !error; } catch (e) {} }
       let st = 'failed';
-      try { const q = new URLSearchParams({ action: 'queue', song, artist: artist || '' }); const r = await fetch(`${WK}?${q}`); const d = await r.json(); st = d.success ? 'queued' : (d.error || 'failed'); } catch (e) {}
+      try { const q = new URLSearchParams({ action: 'queue', song, artist: artist || '' }); if (uri) q.set('uri', uri); const r = await fetch(`${WK}?${q}`); const d = await r.json(); st = d.success ? 'queued' : (d.error || 'failed'); } catch (e) {}
       if (st === 'queued') say('Added! It’s in the line now.');
       else if (st === 'no_active_device') say(saved ? 'Saved, but the car’s Spotify isn’t playing right now.' : 'Couldn’t add that. Try again.', false);
       else if (st === 'track_not_found') say('Couldn’t find that song on Spotify. Check the spelling?', false);
@@ -1505,6 +1610,38 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
       try { const r = await fetch(`${WK}?action=skip`); const d = await r.json(); if (!d.success) say(d.error === 'no_active_device' ? 'Spotify isn’t playing right now.' : 'Couldn’t skip that one.', false); } catch (e) { say('Couldn’t skip that one.', false); }
       setTimeout(() => { b.disabled = false; pollNow(); pollNext(); }, 900);
     };
+
+
+    // search-as-you-type: results appear under the song box, tap one to add it
+    const sIn = document.getElementById('fSong'), sList = document.getElementById('searchList');
+    let sTimer = null, sSeq = 0, sItems = [];
+    const hideList = () => { if (!sList) return; sList.hidden = true; sList.innerHTML = ''; sItems = []; };
+    live.hideSearch = hideList;
+    live.enterPick = () => { const first = sList && !sList.hidden && sList.querySelector('.sr'); if (first) { first.click(); return true; } return false; };
+    const searchSongs = async qv => {
+      try { const r = await fetch(`${WK}?action=search&q=${encodeURIComponent(qv)}`); const d = await r.json(); if (Array.isArray(d.items) && !d.error) return d.items.map(t => ({ name: t.name, artist: t.artist || '', art: t.art || '', uri: t.uri || '' })); } catch (e) {}
+      try { const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(qv)}&entity=song&limit=8`); const d = await r.json(); return (d.results || []).map(t => ({ name: t.trackName, artist: t.artistName || '', art: t.artworkUrl100 || '', uri: '' })); } catch (e) { return []; }
+    };
+    if (sIn && sList) {
+      sIn.addEventListener('input', () => {
+        const qv = sIn.value.trim(); clearTimeout(sTimer);
+        if (qv.length < 2) { hideList(); return; }
+        sTimer = setTimeout(async () => {
+          const my = ++sSeq; sList.hidden = false; if (!sItems.length) sList.innerHTML = '<div class="sr-empty">Searching…</div>';
+          const items = await searchSongs(qv); if (my !== sSeq) return;
+          sItems = items;
+          if (!items.length) { sList.innerHTML = '<div class="sr-empty">No songs found. You can still send it as typed.</div>'; return; }
+          sList.innerHTML = items.map((t, i) => `<button type="button" class="sr" data-i="${i}"><span class="sr-art" style="background-image:url('${(t.art || '').replace(/'/g, '')}')"></span><span class="sr-text"><span class="sr-name" dir="auto">${esc(t.name || '')}</span><span class="sr-artist" dir="auto">${esc(t.artist)}</span></span><span class="sr-add">Add</span></button>`).join('');
+        }, 280);
+      });
+      sList.addEventListener('click', async e => {
+        const b = e.target.closest('.sr'); if (!b) return;
+        const t = sItems[+b.dataset.i]; if (!t) return;
+        b.disabled = true; b.querySelector('.sr-add').textContent = 'Adding…';
+        await live.request(t.name, t.artist, document.getElementById('fName').value.trim(), t.uri);
+        sIn.value = ''; document.getElementById('fArtist').value = ''; hideList(); sIn.blur();
+      });
+    }
 
     // quick picks from the owner's top + recent tracks
     const picksEl = document.getElementById('picks');
@@ -1609,8 +1746,24 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
   const clock = new THREE.Clock();
   const look = new THREE.Vector3(), dir = new THREE.Vector3(), yAxis = new THREE.Vector3(0, 1, 0);
   if (phone) { const h = document.querySelector('.hint'); if (h) h.textContent = D.phoneHint || 'Drag to look around · tap to open'; }
-  const loop = () => {
+  // phones: cap the frame rate and trade sharpness for smoothness if frames start to slip
+  const minFrame = phone ? 1000 / 42 : 1000 / 62;
+  let lastFrame = 0, fAcc = 0, fN = 0;
+  const adapt = ms => {
+    fAcc += ms; fN++;
+    if (fN < 45) return;
+    const avg = fAcc / fN; fAcc = 0; fN = 0;
+    let next = dprNow;
+    if (avg > 38 && dprNow > .7) next = Math.max(.7, dprNow - .15);
+    else if (avg < 26 && dprNow < DPR_MAX) next = Math.min(DPR_MAX, dprNow + .1);
+    if (next !== dprNow) { dprNow = next; renderer.setPixelRatio(dprNow); renderer.setSize(innerWidth, innerHeight, false); if (composer) { composer.setPixelRatio(dprNow); composer.setSize(innerWidth, innerHeight); } }
+  };
+  const loop = now => {
     if (document.hidden) { requestAnimationFrame(loop); return; }
+    now = now || performance.now();
+    if (now - lastFrame < minFrame - 1) { requestAnimationFrame(loop); return; }
+    if (lastFrame) adapt(now - lastFrame);
+    lastFrame = now;
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     api.tick(dt, t);
     const k = current === 'overview' && !reduce ? 1 : 0;
