@@ -328,6 +328,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 /*SCENES*/
+/*SCENES*/
 const fig = (c, x, y, h, col, o = {}) => { // generic anonymous silhouette; x,y = feet (or seat) point
   c.save(); c.fillStyle = col; c.strokeStyle = col; c.lineCap = 'round';
   const hr = h * .13, ty = y - h * .74;
@@ -584,17 +585,32 @@ const ROOMS = [
     c.fillStyle = '#f4f4f0'; c.fillRect(436 + px * 5, 398, 26, 24); c.fillStyle = '#222'; c.font = '700 5px sans-serif'; c.fillText("WORLD'S", 438 + px * 5, 408); c.fillText('BEST BOSS', 437 + px * 5, 415);
     const pa = (t * 120) % 1400 - 200; c.save(); c.translate(pa, 200 + Math.sin(pa / 60) * 30); c.rotate(.15 + Math.sin(pa / 60) * .2); c.fillStyle = '#fafaf6'; c.beginPath(); c.moveTo(18, 0); c.lineTo(-14, -8); c.lineTo(-8, 0); c.lineTo(-14, 7); c.closePath(); c.fill(); c.restore();
   } },
-  { show: 'Seinfeld', sub: 'the corner diner: four friends, a booth, a show about nothing', draw(c, t, px, py) {
-    c.fillStyle = '#e8dcc0'; c.fillRect(0, 0, 960, 600); nightStreet(c, 40 - px * 10, 40 - py * 5, 880, 200, t, px); c.fillStyle = '#d6c8a8'; for (let x = 40; x < 960; x += 220) c.fillRect(x - px * 10 - 6, 40 - py * 5, 12, 200);
-    const on = Math.sin(t * 6) > -.75; c.save(); c.translate(480 - px * 10, 110 - py * 5); c.scale(-1, 1); if (on) glow(c, 0, 0, 160, '255,80,60', .35); c.fillStyle = on ? '#ff5a4a' : '#6a2a24'; c.font = '700 52px sans-serif'; c.textAlign = 'center'; c.fillText('DINER', 0, 18); c.restore();
-    c.fillStyle = '#2a6a64'; c.fillRect(0, 240, 960, 90); c.fillStyle = '#c8c8cc'; c.fillRect(0, 238, 960, 6);
-    for (let i = 0; i < 26; i++) for (let j = 0; j < 7; j++) { c.fillStyle = (i + j) % 2 ? '#1e1e1e' : '#eeeeee'; c.fillRect(i * 40 - 10 + px * 6, 450 + j * 26, 40, 26); }
-    c.fillStyle = '#b02a24'; rrect(c, 80 + px * 3, 280, 800, 170, 16); c.fill(); c.fillStyle = '#cf3a32'; rrect(c, 80 + px * 3, 270, 800, 50, 14); c.fill(); c.fillStyle = '#8a1e1a'; c.fillRect(470 + px * 3, 270, 20, 180);
-    const L = [LK('#e8e4d8', '#3a3a4a', '#2a1a10', 0, { collar: '#fff' }), LK('#3a3a3a', '#2a2a2a', '#1a1a1a', 0, { short: 1 }), LK('#8a5a3a', '#3a3030', '#3a2010', 3), LK('#d8d4c8', '#4a3a30', '#5a3a1a', 3)];
-    [[200, 1], [370, 1], [590, -1], [760, -1]].forEach(([x, d], i) => { const talk = Math.sin(t * 2 + i * 1.7); civ(c, x + px * 3, 400, 1.7, L[i], { sit: 1, aL: [.3, i === 1 ? 1.2 + talk * .6 : .4], aR: [.4 + (i === 2 ? Math.max(0, talk) * 1.8 : 0), i === 2 ? 1.0 : 1.4], hold: i % 2 ? 'mug' : null, head: talk * .12 * d, bob: Math.max(0, Math.sin(t * 5 + i)) * (i === 3 ? -2 : 0) }); });
-    c.fillStyle = '#d8d8dc'; rrect(c, 150 + px * 5, 400, 660, 26, 8); c.fill(); c.fillStyle = '#9a9aa0'; c.fillRect(470 + px * 5, 426, 20, 40);
-    c.fillStyle = '#f4f4f4'; c.beginPath(); c.arc(480 + px * 5, 406, 22, 0, 6.283); c.fill(); c.fillStyle = '#d88a2a'; c.beginPath(); c.arc(480 + px * 5, 406, 14, 0, 6.283); c.fill(); [300, 640].forEach(x => { c.fillStyle = '#fff'; c.fillRect(x + px * 5, 392, 22, 16); });
-    const wx = ((t * 60) % 1300) - 170; civ(c, wx + px * 6, 470, 2.2, LK('#f0d8e0', '#f0d8e0', '#c08040', 2, { dress: 1, collar: '#fff' }), { aL: [.3, .4], aR: [.9, 1.3], step: Math.sin(t * 6) * .6 }); c.fillStyle = '#3a2a1a'; c.fillRect(wx + px * 6 + 36, 470 - 36 * 2.2 + 10, 12, 18);
+  { show: 'How I Met Your Mother', sub: 'the neighborhood pub: a corner booth, a blue French horn, one very long story', draw(c, t, px, py) {
+    for (let r = 0; r < 18; r++) for (let i = 0; i < 24; i++) { c.fillStyle = `hsl(14,${30 + hsh(r * 29 + i) * 10}%,${19 + hsh(r * 5 + i * 3) * 7}%)`; c.fillRect(i * 44 + (r % 2) * 22 - 30 - px * 6, r * 22 - py * 4, 41, 19); }
+    c.fillStyle = '#2a1a10'; c.fillRect(0, 300, 960, 170); c.fillStyle = '#3a2416'; for (let x = 0; x < 960; x += 80) c.fillRect(x - px * 5, 306, 74, 158); c.fillStyle = '#4a2e1a'; c.fillRect(0, 296, 960, 8);
+    [200, 560, 860].forEach((x, i) => lamp(c, x - px * 3, 50, t, i, '255,190,110'));
+    // neon sign, flickering
+    const on = Math.sin(t * 7.3) > -.82, sx = 480 - px * 8; glow(c, sx, 150, on ? 190 : 80, '70,255,150', on ? .32 : .1); c.fillStyle = '#10201a'; rrect(c, sx - 150, 118, 300, 64, 12); c.fill(); c.strokeStyle = on ? '#6dffb0' : '#2a5a40'; c.lineWidth = 3; rrect(c, sx - 150, 118, 300, 64, 12); c.stroke(); c.fillStyle = on ? '#9dffc8' : '#2a5a40'; c.font = '700 34px sans-serif'; c.textAlign = 'center'; c.fillText("MACLAREN'S", sx, 162); c.textAlign = 'left';
+    // the blue French horn on the wall
+    const hx = 90 - px * 8; glow(c, hx + 20, 150, 70, '100,160,255', .25); c.strokeStyle = '#4a8aff'; c.lineWidth = 8; c.beginPath(); c.arc(hx + 20, 150, 32, 0, 6.283); c.stroke(); c.lineWidth = 6; c.beginPath(); c.arc(hx + 20, 150, 18, .6, 6.2); c.stroke(); c.fillStyle = '#4a8aff'; c.beginPath(); c.moveTo(hx + 50, 150); c.quadraticCurveTo(hx + 90, 100, hx + 100, 160); c.quadraticCurveTo(hx + 90, 138, hx + 52, 160); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(hx + 4, 130, 3, 14);
+    // bar shelf with glowing bottles
+    const bx = 640 - px * 6; c.fillStyle = '#2a1a10'; c.fillRect(bx, 220, 300, 10); c.fillRect(bx, 270, 300, 10); for (let i = 0; i < 9; i++) { const col = ['255,170,60', '90,200,255', '255,90,90', '170,255,120'][i % 4]; glow(c, bx + 20 + i * 32, 252, 24, col, .35); c.fillStyle = `rgb(${col})`; c.globalAlpha = .75; rrect(c, bx + 14 + i * 32, 232, 12, 38, 4); c.fill(); c.globalAlpha = 1; }
+    // floor
+    c.fillStyle = '#3a2416'; c.fillRect(0, 470, 960, 130); for (let x = -40; x < 1000; x += 90) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x - px * 6, 470, 3, 130); }
+    // the corner booth with the gang
+    c.fillStyle = '#7a1e22'; rrect(c, 40 + px * 3, 330, 470, 150, 24); c.fill(); c.fillStyle = '#962a2e'; rrect(c, 40 + px * 3, 320, 470, 50, 20); c.fill();
+    const L = [LK('#3a5a8a', '#2a2a3a', '#4a2a14', 0, { collar: '#fff' }), LK('#c8c4b8', '#3a3030', '#7a4a14', 1), LK('#e0c040', '#2a2a30', '#5a3a1a', 0, { dress: 1 }), LK('#2a3a2a', '#3a3030', '#1a1a1a', 0, { collar: '#fff', tie: '#a02a2a' }), LK('#b04060', '#2a2a30', '#d8b050', 1, { dress: 1 })];
+    [[110, 0], [190, 1], [270, 2], [350, 3], [430, 4]].forEach(([x, i]) => { const talk = Math.sin(t * 2 + i * 1.9), lift = i === 3 ? Math.max(0, Math.sin(t * .9)) : 0; civ(c, x + px * 3, 410, 1.6, L[i], { sit: 1, aL: [.3 + Math.max(0, talk) * .5, .4], aR: [.5 + lift * 1.7, i === 3 ? 1.1 - lift * .8 : .5], head: talk * .08 }); });
+    c.fillStyle = '#4a2e1a'; rrect(c, 60 + px * 5, 430, 430, 22, 8); c.fill(); c.fillStyle = '#2a1a10'; c.fillRect(120 + px * 5, 452, 14, 50); c.fillRect(420 + px * 5, 452, 14, 50);
+    for (let i = 0; i < 5; i++) { const gx = 100 + i * 80 + px * 5; c.fillStyle = 'rgba(230,170,50,.9)'; rrect(c, gx, 410, 14, 20, 3); c.fill(); c.fillStyle = 'rgba(255,255,255,.8)'; c.fillRect(gx, 410, 14, 4); }
+    // the bar counter, taps and the bartender
+    const cx = 620 + px * 6; c.fillStyle = '#4a2e1a'; rrect(c, cx, 380, 330, 90, 10); c.fill(); c.fillStyle = '#6a4226'; c.fillRect(cx - 8, 372, 346, 14);
+    for (let i = 0; i < 4; i++) { c.fillStyle = '#c8c8cc'; c.fillRect(cx + 40 + i * 60, 346, 8, 28); c.fillRect(cx + 34 + i * 60, 340, 20, 8); }
+    civ(c, cx + 250, 372, 1.5, LK('#e8e4d8', '#1a1a20', '#3a2a1a', 0, { collar: '#fff', tie: '#222' }), { aL: [.3, .3], aR: [.5 + Math.max(0, Math.sin(t * 1.4)) * 1.2, .5] });
+    // the yellow umbrella leaning on the booth
+    c.save(); c.translate(540 + px * 4, 460); c.rotate(-.12); c.strokeStyle = '#8a8478'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -120); c.stroke(); c.fillStyle = '#f2c428'; c.beginPath(); c.moveTo(0, -130); c.quadraticCurveTo(-34, -118, -40, -90); c.lineTo(40, -90); c.quadraticCurveTo(34, -118, 0, -130); c.fill(); c.restore();
+    // a wandering patron
+    const wx = ((t * 55) % 1300) - 170; civ(c, wx + px * 6, 540, 2, LK('#4a6a4a', '#2a2a30', '#2a1a10', 0), { aL: [.3, .4], aR: [.3, .4], step: Math.sin(t * 6) * .6 });
   } },
   { show: 'Home Alone 2', sub: 'a grand hotel suite at Christmas: room service and one very loud kid', draw(c, t, px, py) {
     c.fillStyle = '#4a1e20'; c.fillRect(0, 0, 960, 600); c.fillStyle = 'rgba(255,215,150,.08)'; for (let x = 0; x < 960; x += 36) c.fillRect(x - px * 5, 0, 18, 600);
@@ -674,11 +690,14 @@ const drawSkyline = (c, t, pan, hover, W, H) => {
       c.fillStyle = '#4a3428'; c.fillRect(x0, B.top, B.w, 700 - B.top); c.fillStyle = '#5a4234'; c.fillRect(x0 - 4, B.top - 6, B.w + 8, 8); c.fillStyle = '#3a3a3e'; c.fillRect(x0 + 30, B.top - 26, 40, 20); c.fillRect(x0 + B.w - 80, B.top - 20, 30, 14);
       for (let k = 0; k < 8; k++) { const wx = x0 + 12 + k * ((B.w - 24) / 8); c.fillStyle = `rgba(225,240,255,${.8 + .15 * Math.sin(t * 22 + k)})`; c.fillRect(wx, B.top + 22, (B.w - 24) / 8 - 8, 40); c.fillStyle = hsh(k + 300) > .5 ? 'rgba(255,214,150,.6)' : '#2a2420'; c.fillRect(wx, B.top + 96, (B.w - 24) / 8 - 8, 40); }
       c.fillStyle = 'rgba(200,225,240,.7)'; c.fillRect(B.x - 24, 640, 48, 60); c.fillStyle = '#2a2a2e'; c.fillRect(x0 + 6, 600, 4, 100); c.fillStyle = '#e8e4da'; c.fillRect(x0 - 30, 584, 92, 26); c.fillStyle = '#2a3a5a'; c.font = '700 9px sans-serif'; c.fillText('BUSINESS PARK', x0 - 26, 601); }
-    if (K === 3) { // Seinfeld: the corner diner with the big red neon sign
-      g = c.createLinearGradient(0, B.top, 0, 700); g.addColorStop(0, '#5a4a3e'); g.addColorStop(1, '#3a2e26'); c.fillStyle = g; c.fillRect(x0, B.top, B.w, 700 - B.top); c.fillStyle = '#6a5a4a'; c.fillRect(x0 - 6, B.top - 8, B.w + 12, 10);
+    if (K === 3) { // How I Met Your Mother: the neighborhood pub with its green neon sign
+      g = c.createLinearGradient(0, B.top, 0, 700); g.addColorStop(0, '#5a3226'); g.addColorStop(1, '#341c16'); c.fillStyle = g; c.fillRect(x0, B.top, B.w, 700 - B.top); c.fillStyle = '#6a4234'; c.fillRect(x0 - 6, B.top - 8, B.w + 12, 10);
       for (let r = 0; r < 6; r++) for (let k = 0; k < 7; k++) if (hsh(r * 5 + k + 90) > .4) { c.fillStyle = 'rgba(255,214,150,.6)'; c.fillRect(x0 + 14 + k * 35, B.top + 18 + r * 32, 16, 20); }
-      c.fillStyle = 'rgba(255,240,205,.92)'; c.fillRect(x0 + 10, 600, B.w - 20, 70); c.fillStyle = '#3a2e26'; for (let k = 1; k < 5; k++) c.fillRect(x0 + 10 + k * (B.w - 20) / 5, 600, 3, 70);
-      const on = Math.sin(t * 6) > -.7; c.fillStyle = '#2a1410'; c.fillRect(x0 + 6, 548, B.w - 12, 44); if (on) glow(c, B.x, 570, 150, '255,60,50', .45); c.fillStyle = on ? '#ff4a3a' : '#6a2a24'; c.font = '700 30px sans-serif'; c.textAlign = 'center'; c.fillText('RESTAURANT', B.x, 581); c.textAlign = 'left'; }
+      c.fillStyle = '#1a3a2a'; c.fillRect(x0 + 6, 556, B.w - 12, 36); c.fillStyle = '#0e2418'; for (let k = 0; k < 8; k++) c.fillRect(x0 + 6 + k * (B.w - 12) / 8, 592, (B.w - 12) / 16, 8);
+      const on = Math.sin(t * 7.3) > -.82; if (on) glow(c, B.x, 574, 140, '90,255,160', .4); c.fillStyle = on ? '#9dffc8' : '#2a5a40'; c.font = '700 19px sans-serif'; c.textAlign = 'center'; c.fillText("MACLAREN'S", B.x, 581); c.textAlign = 'left';
+      c.fillStyle = 'rgba(255,200,130,.85)'; c.fillRect(x0 + 10, 604, B.w - 20, 66); c.fillStyle = '#341c16'; for (let k = 1; k < 4; k++) c.fillRect(x0 + 10 + k * (B.w - 20) / 4, 604, 3, 66);
+      c.fillStyle = '#4a8aff'; c.beginPath(); c.arc(x0 + 40, 636, 10, 0, 6.283); c.fill(); c.fillStyle = 'rgba(255,220,160,.55)'; c.fillRect(B.x - 4, 640, 8, 30);
+    }
     if (K === 4) { // Home Alone 2: the grand chateau hotel on Fifth Avenue
       g = c.createLinearGradient(0, B.top, 0, 700); g.addColorStop(0, '#c8bca4'); g.addColorStop(1, '#8a806c'); c.fillStyle = g; c.fillRect(x0, B.top + 40, B.w, 700 - B.top - 40);
       c.fillStyle = '#3e6a5a'; c.beginPath(); c.moveTo(x0 - 8, B.top + 44); c.lineTo(x0 + 18, B.top); c.lineTo(x0 + B.w - 18, B.top); c.lineTo(x0 + B.w + 8, B.top + 44); c.closePath(); c.fill();
@@ -703,6 +722,7 @@ const drawSkyline = (c, t, pan, hover, W, H) => {
 const skyHit = (pan, x, y, W, H) => { const sy = H / 700, px = x / sy + ((pan % PANO) + PANO) % PANO, py = y / sy; let best = -1, bd = 1e9; SKY_TARGETS.forEach((B, i) => { for (const k of [-PANO, 0, PANO]) { const bx = B.x + k; const inB = Math.abs(px - bx) < B.w / 2 + 20 && py > Math.min(B.top, B.ty - 40) - 70; const d = Math.hypot(px - (B.tx + k), py - B.ty); if ((inB || d < 70) && d < bd) { bd = d; best = i; } } }); return best; };
 
 /*ENDSCENES*/
+/*ENDSCENES*/
 
 window.DESIGN = {
   bg: 0x050507, fog: null, exposure: 1.12,
@@ -718,12 +738,12 @@ window.DESIGN = {
   // Paste a YouTube link, or the path to a video file in your repo (e.g. 'videos/friends.mp4').
   // Optional start/end in seconds: { url: 'https://youtu.be/XXXXXXXXXXX', start: 42, end: 75 }. Leave '' to show the animated room.
   scopeVideos: {
-    'Friends': '',
+    'Friends': 'videos/friends.mp4',
     'Gossip Girl': 'videos/gossip-girl.mp4',
-    'The Office': '',
-    'Seinfeld': '',
-    'Home Alone 2': '',
-    'Brooklyn Nine-Nine': '',
+    'The Office': 'videos/the-office.mp4',
+    'How I Met Your Mother': '',
+    'Home Alone 2': 'videos/home-alone-2.mp4',
+    'Brooklyn Nine-Nine': 'videos/brooklyn-nine-nine.mp4',
     'Skyfight': '',
   },
   phoneHint: 'Drag to look all the way round · tap the print, the records, the window or the telescope',
@@ -1353,11 +1373,6 @@ window.DESIGN = {
       { const mt2 = canvasTex(128, 64), c = mt2.x; c.fillStyle = '#f2efe6'; c.fillRect(0, 0, 128, 64); c.fillStyle = '#222'; c.font = `700 15px ${SANS}`; c.textAlign = 'center'; c.fillText("WORLD'S", 64, 25); c.fillText('BEST BOSS', 64, 45); mt2.t.needsUpdate = true; const lb = new THREE.Mesh(new THREE.PlaneGeometry(.075, .04), new THREE.MeshBasicMaterial({ map: mt2.t })); lb.position.set(.08, .58, -.04 + .0455); stb.add(lb); }
       cyl(.02, .025, .012, std(0xd9a35b, .3, .8), .12, .525, .07, stb, 12); cyl(.006, .006, .06, std(0xd9a35b, .3, .8), .12, .56, .07, stb, 8); { const sp = new THREE.Mesh(new THREE.SphereGeometry(.022, 10, 8), std(0xd9a35b, .25, .85)); sp.position.set(.12, .6, .07); stb.add(sp); }
       np(stb);
-      // Seinfeld: an aluminium pole, no decorations
-      const pole = new THREE.Group(); pole.position.set(2.45, 0, FRONT - .5); pole.rotation.y = Math.PI; scene.add(pole);
-      cyl(.022, .022, 1.35, std(0xc9ced4, .25, .9), 0, .72, 0, pole, 12); cyl(.1, .12, .04, std(0x2a2a2a, .5, .5), 0, .02, 0, pole, 16);
-      { const pl = canvasTex(128, 40), c = pl.x; c.fillStyle = '#d9a35b'; c.fillRect(0, 0, 128, 40); c.fillStyle = '#2a1a08'; c.font = `700 16px ${SANS}`; c.textAlign = 'center'; c.fillText('FESTIVUS', 64, 26); pl.t.needsUpdate = true; const pm = new THREE.Mesh(new THREE.PlaneGeometry(.16, .05), new THREE.MeshBasicMaterial({ map: pl.t })); pm.position.set(0, 1.1, .03); pole.add(pm); }
-      np(pole);
       // Home Alone 2: a tiny Christmas tree on the mantle
       const xt = new THREE.Group(); xt.position.set(FX - .03, 1.075, BACK + .16); xt.scale.setScalar(.8); scene.add(xt);
       for (let i = 0; i < 3; i++) { const cn = new THREE.Mesh(new THREE.ConeGeometry(.08 - i * .02, .12, 10), std(0x1f6b34, .8)); cn.position.y = .1 + i * .08; xt.add(cn); }
@@ -1524,7 +1539,7 @@ window.DESIGN = {
       ['Gossip Girl', 'the phone', [.5, .56, -.64]], ['Friends', 'orange armchair', [-1.0, .75, -.85]],
       ['Friends', 'purple door', [-1.15, 1.72, -1.98]], ['Friends', 'how you doin’ post-it', [.0, 1.0, -1.7]], ['Friends', 'French horn', [FX, 2.43, -1.95]],
       ['How I Met Your Mother', 'yellow umbrella', [-1.22, 1.0, 4.1]], ['Breakfast at Tiffany’s', 'coffee and pearls', [1.77, .5, -.87]],
-      ['Taxi Driver', 'yellow cab', [.25, .5, -.87]], ['The Office', 'jello stapler', [-2.42, .66, -.5]], ['Seinfeld', 'Festivus pole', [2.45, 1.5, 3.9]],
+      ['Taxi Driver', 'yellow cab', [.25, .5, -.87]], ['The Office', 'jello stapler', [-2.42, .66, -.5]],
       ['Home Alone 2', 'tiny tree', [FX - .03, 1.42, -1.84]], ['Home Alone 2', 'pigeon lady’s pigeon', [2.42, 1.16, -.05]], ['Web-slinger vibes', 'swinger + web', [-.95, 2.55, -1.97]],
       ['Telescope', 'tap it, peek into the buildings', [2.5, 1.3, -.85]], ['NYC', 'Lady Liberty', [-1.35, 1.3, -1.86]],
     ];
