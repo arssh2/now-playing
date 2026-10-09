@@ -2305,40 +2305,56 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     // the fogged glass is shared: everyone sees everyone's wipes
     const FOG = LIVE.fogTable; let fogOn = !!(sbc && FOG), fogLast = 0, fogLoaded = false; const mine = new Set();
     const applyRemote = pts => { if (!Array.isArray(pts) || !pts.length) return; for (let i = 1; i < pts.length; i++) stroke(pts[i - 1], pts[i]); if (pts.length === 1) stroke(pts[0], pts[0]); };
+    let fogBusy = false, fogErrs = 0; const outbox = [];
     const pollFog = async () => {
-      if (!fogOn) return;
+      if (!sbc || !FOG || fogBusy) return; fogBusy = true;
       try {
         if (!fogLoaded) {
           const { data: clr, error: e1 } = await sbc.from(FOG).select('id').eq('kind', 'clear').order('id', { ascending: false }).limit(1);
-          if (e1) { fogOn = false; return; }
+          if (e1) throw e1;
           fogLast = clr && clr.length ? clr[0].id : 0; fogLoaded = true;
         }
-        const { data, error } = await sbc.from(FOG).select('id, points, kind').gt('id', fogLast).order('id', { ascending: true }).limit(300);
-        if (error) { fogOn = false; return; }
-        (data || []).forEach(row => {
-          fogLast = Math.max(fogLast, row.id);
-          if (mine.has(row.id)) return;
-          if (row.kind === 'clear') { api.paintWall(); wallTex.t.needsUpdate = true; copyToPad(); }
-          else applyRemote(row.points);
-        });
-      } catch (e) {}
+        for (let guard = 0; guard < 6; guard++) {
+          const { data, error } = await sbc.from(FOG).select('id, points, kind').gt('id', fogLast).order('id', { ascending: true }).limit(300);
+          if (error) throw error;
+          (data || []).forEach(row => {
+            fogLast = Math.max(fogLast, row.id);
+            if (mine.has(row.id)) return;
+            if (row.kind === 'clear') { api.paintWall(); wallTex.t.needsUpdate = true; copyToPad(); }
+            else applyRemote(row.points);
+          });
+          if (!data || data.length < 300) break;
+        }
+        fogErrs = 0;
+      } catch (e) { if (fogErrs++ < 3) console.warn('fog sync (read):', e && (e.message || e)); }
+      fogBusy = false;
     };
-    live.shareStroke = async pts => {
-      if (!fogOn || !pts.length) return;
+    const flushFog = async () => {
+      while (outbox.length) {
+        const row = outbox[0];
+        try {
+          const { data, error } = await sbc.from(FOG).insert(row).select('id').single();
+          if (error) { if (data == null && /select|permission|policy/i.test(error.message || '')) { /* inserted but not readable */ } else throw error; }
+          if (data) mine.add(data.id);
+          outbox.shift();
+        } catch (e) { console.warn('fog sync (write):', e && (e.message || e)); break; }
+      }
+    };
+    live.shareStroke = pts => {
+      if (!sbc || !FOG || !pts.length) return;
       const sim = pts.filter((p2, i) => i % 2 === 0 || i === pts.length - 1).slice(0, 400).map(p2 => [Math.round(p2[0]), Math.round(p2[1])]);
-      try { const { data } = await sbc.from(FOG).insert({ points: sim, kind: 'wipe' }).select('id').single(); if (data) mine.add(data.id); } catch (e) {}
+      outbox.push({ points: sim, kind: 'wipe' }); flushFog();
     };
-    live.shareClear = async () => {
-      if (!fogOn) return;
-      try { const { data } = await sbc.from(FOG).insert({ points: [], kind: 'clear' }).select('id').single(); if (data) mine.add(data.id); } catch (e) {}
-    };
+    live.shareClear = () => { if (!sbc || !FOG) return; outbox.push({ points: [], kind: 'clear' }); flushFog(); };
+    if (sbc && FOG) { try { sbc.channel('fog-live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: FOG }, () => pollFog()).subscribe(); } catch (e) {} }
+    setInterval(() => { if (outbox.length) flushFog(); }, 4000);
 
     if (sbc) { try { sbc.from('visits').insert({}).then(() => {}, () => {}); } catch (e) {} }
     pollNow(); pollNext(); loadPicks(); pollFog();
     setInterval(() => { if (!document.hidden) pollNow(); }, 3000);
     setInterval(() => { if (!document.hidden) pollNext(); }, 5000);
-    setInterval(() => { if (!document.hidden) pollFog(); }, 2500);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) { pollNow(); pollNext(); } });
+    setInterval(() => { if (!document.hidden) pollFog(); }, 2000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { pollNow(); pollNext(); pollFog(); } });
   }
 
   /* ---------- floating labels in the scene ---------- */
