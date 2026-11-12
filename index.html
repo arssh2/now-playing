@@ -2438,7 +2438,9 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 <div id="djBox" role="dialog" aria-label="Personal DJ">
   <div id="djSay">Switch me on and I'll talk between songs.</div>
   <label>Style<select id="djPersona"><option value="hype">Hype radio host</option><option value="chill">Chill late-night</option><option value="comedian">Funny roast</option></select></label>
-  <label>Voice<select id="djVoice"></select></label>
+  <label>Voice engine<select id="djEngine"><option value="gemini">Gemini voice (realistic)</option><option value="device">This device's voice</option></select></label>
+  <label id="djGVWrap">Gemini voice<select id="djGV"><option value="Puck">Puck — upbeat</option><option value="Fenrir">Fenrir — excitable</option><option value="Zephyr">Zephyr — bright</option><option value="Charon">Charon — smooth, informative</option><option value="Kore">Kore — firm</option><option value="Aoede">Aoede — breezy</option><option value="Leda">Leda — youthful</option><option value="Orus">Orus — steady</option><option value="Algenib">Algenib — gravelly</option><option value="Achird">Achird — friendly</option></select></label>
+  <label id="djVWrap">Device voice<select id="djVoice"></select></label>
   <label class="chk"><input type="checkbox" id="djAuto" checked> Let the DJ add songs to the queue</label>
   <div class="row"><button id="djToggle" class="primary" type="button">Turn DJ on</button><button id="djTest" type="button">Test voice</button></div>
   <div id="djSt"></div>
@@ -2447,10 +2449,22 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 (() => {
   const W = (window.DESIGN && window.DESIGN.live && window.DESIGN.live.worker) || 'https://icy-dust-0e5d.aarssh7.workers.dev/';
   const $ = id => document.getElementById(id);
-  const btn = $('djBtn'), box = $('djBox'), say = $('djSay'), st = $('djSt'), tog = $('djToggle'), persona = $('djPersona'), voiceSel = $('djVoice'), auto = $('djAuto');
+  const btn = $('djBtn'), box = $('djBox'), say = $('djSay'), st = $('djSt'), tog = $('djToggle'), persona = $('djPersona'), voiceSel = $('djVoice'), auto = $('djAuto'), engine = $('djEngine'), gv = $('djGV');
   const store = { get(k, d) { try { const v = localStorage.getItem('dj_' + k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('dj_' + k, v); } catch (e) {} } };
   const synth = window.speechSynthesis;
   persona.value = store.get('persona', 'hype'); auto.checked = store.get('auto', '1') === '1';
+  engine.value = store.get('engine', 'gemini'); gv.value = store.get('gv', 'Puck');
+  const syncEng = () => { $('djGVWrap').style.display = engine.value === 'gemini' ? '' : 'none'; $('djVWrap').style.display = engine.value === 'gemini' ? 'none' : ''; };
+  syncEng(); engine.onchange = () => { store.set('engine', engine.value); syncEng(); }; gv.onchange = () => store.set('gv', gv.value);
+  let ac = null;
+  const unlockAudio = () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); const b = ac.createBuffer(1, 1, 22050), n = ac.createBufferSource(); n.buffer = b; n.connect(ac.destination); n.start(0); } catch (e) {} };
+  const playGemini = async (text) => {
+    const url = W + '?action=tts&text=' + encodeURIComponent(text) + '&voice=' + gv.value + '&persona=' + persona.value;
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('tts ' + r.status);
+    const buf = await ac.decodeAudioData(await r.arrayBuffer());
+    return () => new Promise(res => { const n = ac.createBufferSource(); n.buffer = buf; n.connect(ac.destination); n.onended = res; n.start(0); setTimeout(res, buf.duration * 1000 + 1500); });
+  };
   persona.onchange = () => store.set('persona', persona.value); auto.onchange = () => store.set('auto', auto.checked ? '1' : '0');
   let on = false, timer = null, curKey = '', spoken = false, busy = false, voices = [];
   const setSt = t => { st.textContent = t || ''; };
@@ -2486,9 +2500,11 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 
   const deliver = async (line) => {
     say.textContent = line;
+    let play = null;
+    if (engine.value === 'gemini') { try { if (!ac) unlockAudio(); play = await playGemini(line); } catch (e) { setSt('Gemini voice unavailable, using device voice. (' + (e.message || e) + ')'); } }
     const vol = await getVol();
     if (typeof vol === 'number' && vol > 25) await setVol(Math.max(15, Math.round(vol * .3)));
-    await speak(line);
+    try { await (play ? play() : speak(line)); } catch (e) { await speak(line); }
     if (typeof vol === 'number' && vol > 25) await setVol(vol);
   };
 
@@ -2500,7 +2516,7 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
     if (key !== curKey) { curKey = key; spoken = false; }
     if (!d.is_playing || !d.duration_ms || spoken) return;
     const left = d.duration_ms - d.progress_ms;
-    if (left > 22000 || left < 2500) return;
+    if (left > 30000 || left < 2500) return;
     spoken = true; busy = true; setSt('DJ is thinking…');
     try {
       const r = await api('action=dj&track=' + encodeURIComponent(d.track) + '&artist=' + encodeURIComponent(d.artist || '') + '&persona=' + persona.value + (auto.checked ? '&autoqueue=1' : ''));
@@ -2512,7 +2528,7 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 
   const start = async () => {
     on = true; btn.classList.add('on'); tog.textContent = 'Turn DJ off'; store.set('on', '1');
-    setSt('DJ is on. Keep this page open and the screen awake.');
+    setSt('DJ is on. Keep this page open and the screen awake.'); unlockAudio();
     if (synth) { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); } catch (e) {} }
     clearInterval(timer); timer = setInterval(tick, 4000); tick();
   };
@@ -2520,6 +2536,6 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 
   btn.onclick = () => { const o = box.classList.toggle('open'); btn.setAttribute('aria-expanded', o); };
   tog.onclick = () => on ? stop() : start();
-  $('djTest').onclick = async () => { const t = 'This is your DJ. Next up, something you are going to love.'; say.textContent = t; await speak(t); };
+  $('djTest').onclick = async () => { unlockAudio(); const t = 'This is your DJ. Next up, something you are going to love.'; say.textContent = t; setSt(engine.value === 'gemini' ? 'Loading Gemini voice…' : ''); try { if (engine.value === 'gemini') { const play = await playGemini(t); setSt(''); await play(); } else await speak(t); } catch (e) { setSt('Gemini voice failed (' + (e.message || e) + '). Using device voice.'); await speak(t); } };
 })();
 </script>
