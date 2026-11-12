@@ -2417,3 +2417,109 @@ window.DESIGN.imgProxy = 'https://icy-dust-0e5d.aarssh7.workers.dev/?action=imgp
 })();
 
 </script>
+
+<style>
+  #djBtn{position:fixed; left:14px; bottom:calc(14px + env(safe-area-inset-bottom,0px)); z-index:30; font-family:var(--f-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; padding:10px 14px; border-radius:999px; border:1px solid var(--line); background:color-mix(in srgb,var(--ink-2) 80%,transparent); color:var(--paper); cursor:pointer; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);}
+  #djBtn.on{border-color:var(--a1); box-shadow:0 0 18px color-mix(in srgb,var(--a1) 40%,transparent);}
+  #djBtn.on::before{content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--a1); margin-right:8px; animation:djp 1.4s ease-in-out infinite;}
+  @keyframes djp{50%{opacity:.25}}
+  #djBox{position:fixed; left:14px; bottom:calc(64px + env(safe-area-inset-bottom,0px)); z-index:30; width:min(320px,calc(100vw - 28px)); padding:16px; border-radius:16px; border:1px solid var(--line); background:color-mix(in srgb,var(--ink) 92%,transparent); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); color:var(--paper); font-family:var(--f-body); display:none; flex-direction:column; gap:12px;}
+  #djBox.open{display:flex;}
+  #djBox label{display:flex; flex-direction:column; gap:5px; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim);}
+  #djBox select{font:inherit; font-size:13px; letter-spacing:0; text-transform:none; padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--ink-2); color:var(--paper);}
+  #djBox .chk{flex-direction:row; align-items:center; gap:9px; text-transform:none; letter-spacing:0; font-family:var(--f-body); font-size:13px; color:var(--paper);}
+  #djBox .row{display:flex; gap:8px;}
+  #djBox button{flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:var(--ink-2); color:var(--paper); font-family:var(--f-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;}
+  #djBox button.primary{background:var(--a1); color:var(--ink); border-color:var(--a1);}
+  #djSay{font-family:var(--f-display); font-style:italic; font-size:15px; line-height:1.4; min-height:42px; color:var(--paper);}
+  #djSt{font-family:var(--f-mono); font-size:10.5px; color:var(--dim); letter-spacing:.04em;}
+</style>
+<button id="djBtn" type="button" aria-expanded="false">DJ</button>
+<div id="djBox" role="dialog" aria-label="Personal DJ">
+  <div id="djSay">Switch me on and I'll talk between songs.</div>
+  <label>Style<select id="djPersona"><option value="hype">Hype radio host</option><option value="chill">Chill late-night</option><option value="comedian">Funny roast</option></select></label>
+  <label>Voice<select id="djVoice"></select></label>
+  <label class="chk"><input type="checkbox" id="djAuto" checked> Let the DJ add songs to the queue</label>
+  <div class="row"><button id="djToggle" class="primary" type="button">Turn DJ on</button><button id="djTest" type="button">Test voice</button></div>
+  <div id="djSt"></div>
+</div>
+<script>
+(() => {
+  const W = (window.DESIGN && window.DESIGN.live && window.DESIGN.live.worker) || 'https://icy-dust-0e5d.aarssh7.workers.dev/';
+  const $ = id => document.getElementById(id);
+  const btn = $('djBtn'), box = $('djBox'), say = $('djSay'), st = $('djSt'), tog = $('djToggle'), persona = $('djPersona'), voiceSel = $('djVoice'), auto = $('djAuto');
+  const store = { get(k, d) { try { const v = localStorage.getItem('dj_' + k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('dj_' + k, v); } catch (e) {} } };
+  const synth = window.speechSynthesis;
+  persona.value = store.get('persona', 'hype'); auto.checked = store.get('auto', '1') === '1';
+  persona.onchange = () => store.set('persona', persona.value); auto.onchange = () => store.set('auto', auto.checked ? '1' : '0');
+  let on = false, timer = null, curKey = '', spoken = false, busy = false, voices = [];
+  const setSt = t => { st.textContent = t || ''; };
+
+  const loadVoices = () => {
+    if (!synth) { setSt('This browser has no speech voice.'); return; }
+    voices = synth.getVoices().filter(v => /^(en|ar)/i.test(v.lang));
+    if (!voices.length) voices = synth.getVoices();
+    const saved = store.get('voice', '');
+    voiceSel.innerHTML = voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join('');
+    let idx = voices.findIndex(v => v.name === saved);
+    if (idx < 0) idx = voices.findIndex(v => /en[-_](US|GB)/i.test(v.lang) && /(Samantha|Daniel|Google|Aaron|Alex|Natural|Premium|Enhanced)/i.test(v.name));
+    if (idx < 0) idx = voices.findIndex(v => /^en/i.test(v.lang));
+    if (idx >= 0) voiceSel.value = String(idx);
+  };
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  voiceSel.onchange = () => { const v = voices[+voiceSel.value]; if (v) store.set('voice', v.name); };
+
+  const api = (q) => fetch(W + '?' + q, { cache: 'no-store' }).then(r => r.json());
+  const getVol = async () => { try { return (await api('action=volume')).volume; } catch (e) { return null; } };
+  const setVol = async p => { try { await api('action=volume&pct=' + p); } catch (e) {} };
+
+  const speak = (text) => new Promise(res => {
+    if (!synth) return res();
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = voices[+voiceSel.value]; if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = persona.value === 'chill' ? .93 : 1.04; u.pitch = persona.value === 'chill' ? .9 : 1;
+    let done = false; const fin = () => { if (!done) { done = true; res(); } };
+    u.onend = fin; u.onerror = fin; setTimeout(fin, 30000);
+    synth.speak(u);
+  });
+
+  const deliver = async (line) => {
+    say.textContent = line;
+    const vol = await getVol();
+    if (typeof vol === 'number' && vol > 25) await setVol(Math.max(15, Math.round(vol * .3)));
+    await speak(line);
+    if (typeof vol === 'number' && vol > 25) await setVol(vol);
+  };
+
+  const tick = async () => {
+    if (!on || busy) return;
+    let d; try { d = await api('t=' + Date.now()); } catch (e) { return; }
+    if (!d || !d.track) return;
+    const key = d.track + '|' + d.artist;
+    if (key !== curKey) { curKey = key; spoken = false; }
+    if (!d.is_playing || !d.duration_ms || spoken) return;
+    const left = d.duration_ms - d.progress_ms;
+    if (left > 22000 || left < 2500) return;
+    spoken = true; busy = true; setSt('DJ is thinking…');
+    try {
+      const r = await api('action=dj&track=' + encodeURIComponent(d.track) + '&artist=' + encodeURIComponent(d.artist || '') + '&persona=' + persona.value + (auto.checked ? '&autoqueue=1' : ''));
+      if (r && r.line) { setSt(r.queued ? 'Added to queue: ' + r.queued.track + ' — ' + r.queued.artist : ''); await deliver(r.line); }
+      else setSt('DJ error: ' + ((r && (r.error || r.message)) || 'no reply'));
+    } catch (e) { setSt('DJ could not reach the server.'); }
+    busy = false;
+  };
+
+  const start = async () => {
+    on = true; btn.classList.add('on'); tog.textContent = 'Turn DJ off'; store.set('on', '1');
+    setSt('DJ is on. Keep this page open and the screen awake.');
+    if (synth) { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); } catch (e) {} }
+    clearInterval(timer); timer = setInterval(tick, 4000); tick();
+  };
+  const stop = () => { on = false; btn.classList.remove('on'); tog.textContent = 'Turn DJ on'; store.set('on', '0'); clearInterval(timer); if (synth) synth.cancel(); setSt('DJ is off.'); };
+
+  btn.onclick = () => { const o = box.classList.toggle('open'); btn.setAttribute('aria-expanded', o); };
+  tog.onclick = () => on ? stop() : start();
+  $('djTest').onclick = async () => { const t = 'This is your DJ. Next up, something you are going to love.'; say.textContent = t; await speak(t); };
+})();
+</script>
